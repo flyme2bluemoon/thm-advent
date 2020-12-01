@@ -5,7 +5,8 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 
 ## Day 1: A Christmas Crisis
 
-*Category: Web Exploitation*
+*Category: Web Exploitation*  
+*Tags: HTTP, Cookies*  
 
 > Understand how the web works and take back control of the Christmas Command Centre!
 
@@ -52,3 +53,4 @@ I noticed that the program sends a post request to `http://10.10.161.100/api/che
 curl -X POST -H "Cookie: auth=7b22636f6d70616e79223a22546865204265737420466573746976616c20436f6d70616e79222c2022757365726e616d65223a2273616e7461227d" http://10.10.161.100/api/checkflag;
 ```
 I have also included the shell script I wrote in the day01-christmas-crisis directory. 
+
