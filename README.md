@@ -18,7 +18,7 @@ Firstly, I checked out the web server running on port 80 (HTTP).
 
 ![screenshot](day01-christmas-crisis/ChristmasControlCenterLogin.png)
 
-I register for an account using the credentials `bluemoon:bluemoon` and then log in with those credentials.
+I register for an account using the credentials `admin:bluemoon` and then log in with those credentials.
 
 ![screenshot](day01-christmas-crisis/ChirstmasControlCenterControlPanel.png)
 
