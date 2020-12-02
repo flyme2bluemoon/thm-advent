@@ -3,6 +3,33 @@ Try Hack Me Advent of Cyber Security
 
 Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christmas)
 
+## Checklist
+
+- [ ] Day 1 - A Christmas Crisis
+- [ ] Day 2 - The Elf Strikes Back
+- [ ] Day 3 - Christmas Chaos
+- [ ] Day 4 - Santa's watching
+- [ ] Day 5 - Someone stole Santa's gift list!
+- [ ] Day 6 - Be careful with what you wish on a Christmas night
+- [ ] Day 7 - Coal for Christmas
+- [ ] Day 8 - The Grinch Really Did Steal Christmas
+- [ ] Day 9 - What's Under the Christmas Tree?
+- [ ] Day 10 - Anyone can be Santa!
+- [ ] Day 11 - Don't be Elfish!
+- [ ] Day 12 - The Rogue Gnome
+- [ ] Day 13 - Ready, set, elf.
+- [ ] Day 14 - Where's Rudolph?
+- [ ] Day 15 - There's a Python in my stocking!
+- [ ] Day 16 - Help! Where is Santa?
+- [ ] Day 17 - ReverseELFneering
+- [ ] Day 18 - The Bits of the Christmas
+- [ ] Day 19 - The Naughty or Nice List
+- [ ] Day 20 - PowershELlF to the rescue
+- [ ] Day 21 - Time for some ELForensics
+- [ ] Day 22 - Elf McEager becomes CyberElf
+- [ ] Day 23 - The Grinch strikes again!
+- [ ] Day 24 - The Trial Before Christmas
+
 ## Day 1: A Christmas Crisis
 
 *Category: Web Exploitation*  
