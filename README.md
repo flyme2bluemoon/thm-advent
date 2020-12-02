@@ -54,3 +54,11 @@ curl -X POST -H "Cookie: auth=7b22636f6d70616e79223a2254686520426573742046657374
 ```
 I have also included the shell script I wrote in the day01-christmas-crisis directory. 
 
+## Day 2: The Elf Strikes Back
+
+*Category: Web*  
+*Tags: RCE*  
+
+> Learn about basic file upload filter bypasses by performing a security audit on the new security management server!
+
+IP: ``
