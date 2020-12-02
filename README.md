@@ -5,8 +5,8 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 
 ## Checklist
 
-- [ ] Day 1 - A Christmas Crisis
-- [ ] Day 2 - The Elf Strikes Back
+- [x] Day 1 - A Christmas Crisis
+- [x] Day 2 - The Elf Strikes Back
 - [ ] Day 3 - Christmas Chaos
 - [ ] Day 4 - Santa's watching
 - [ ] Day 5 - Someone stole Santa's gift list!
