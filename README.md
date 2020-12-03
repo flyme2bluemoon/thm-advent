@@ -7,7 +7,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 
 - [x] Day 1 - A Christmas Crisis
 - [x] Day 2 - The Elf Strikes Back
-- [ ] Day 3 - Christmas Chaos
+- [x] Day 3 - Christmas Chaos
 - [ ] Day 4 - Santa's watching
 - [ ] Day 5 - Someone stole Santa's gift list!
 - [ ] Day 6 - Be careful with what you wish on a Christmas night
@@ -71,7 +71,9 @@ After setting the auth cookie to that string, we get access to the santa account
 
 ### Getting the flag
 
-I'm not sure why but I got a bit stuck here. Turns out, you just flick all the switches and you get the final flag: `THM{MjY0Yzg5NTJmY2Q1NzM1NjBmZWFhYmQy}`.
+I'm not sure why but I got a bit stuck here. Turns out, you just flick all the switches and you get the final flag.
+
+Flag: `THM{MjY0Yzg5NTJmY2Q1NzM1NjBmZWFhYmQy}`
 
 ### Making a [solve script](day01-christmas-crisis/solve.sh)
 
@@ -196,4 +198,49 @@ Good luck on your mission (and maybe I'll see y'all again on Christmas Eve)!
 ==============================================================
 ```
 
-And so with that, we get a nice message and the flag: `THM{MGU3Y2UyMGUwNjExYTY4NTAxOWJhMzhh}`.
+And so with that, we get a nice message and the flag.
+
+Flag: `THM{MGU3Y2UyMGUwNjExYTY4NTAxOWJhMzhh}`
+
+## Day 3: Christmas Chaos
+
+*Category: Web Exploitation*  
+*Tags: Authentication Bypass*  
+
+> Hack the hackers and bypass a login page to gain admin privileges.
+
+IP: `10.10.88.75`
+
+### Basic Enumeration
+
+As always, we check out the webpage running on port 80 first.
+
+![screenshot](day03-christmas-chaos/initial_page.png)
+
+### Brute force attack
+
+As suggested by the lesson on TryHackMe, we can use a dictionary attack to break the authentication and gain unauthorized access.  
+
+First, I created the username and password wordlist using the dictionary provided ([username dictionary](day03-christmas-chaos/usernames.txt) and [password dictionary](day03-christmas-chaos/passwords.txt)).
+
+Next, I monitored the network traffic in Firefox to see how the login request is being sent. Unsurprisingly, this web app sends a post request with the form data.
+
+![screenshot](day03-christmas-chaos/network_tab.png)
+
+Then I used the following `hydra` command to find the username and password. `-L` is used to specify the username dictionary, `-P` is used to specify the password dictionary, http-post-form and the string is used to specify how to send the login request. `^USER^` and `^PASS^` are replaced by the username or password from the wordlist respectively. `incorrect` at the very end it is part error message when we use the wrong username password combo.
+
+```sh
+hydra -L usernames.txt -P passwords.txt 10.10.88.75 http-post-form "/login:username=^USER^&password=^PASS^:incorrect"
+```
+
+And sure enough, we find the username and password:
+
+```
+[80][http-post-form] host: 10.10.88.75   login: admin   password: 12345
+```
+
+Now that we have credentials, we can log in and get the flag!
+
+![screenshot](day03-christmas-chaos/flag.png)
+
+Flag: `THM{885ffab980e049847516f9d8fe99ad1a}`
