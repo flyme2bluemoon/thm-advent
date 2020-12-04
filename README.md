@@ -1,5 +1,6 @@
-# thm-advent
-Try Hack Me Advent of Cyber Security
+# Try Hack Me Advent of Cyber
+
+This repo contains a collection of bad writeups and bad solve scripts.  
 
 Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christmas)
 
