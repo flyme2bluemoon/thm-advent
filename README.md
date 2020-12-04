@@ -246,7 +246,7 @@ Now that we have credentials, we can log in and get the flag!
 
 Flag: `THM{885ffab980e049847516f9d8fe99ad1a}`
 
-# Day 4: Santa's watching
+## Day 4: Santa's watching
 
 *Category: Web Exploitation*  
 *Tags: Authorization Bypass*  
