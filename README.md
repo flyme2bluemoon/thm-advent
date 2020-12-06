@@ -10,7 +10,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] Day 2 - The Elf Strikes Back
 - [x] Day 3 - Christmas Chaos
 - [x] Day 4 - Santa's watching
-- [ ] Day 5 - Someone stole Santa's gift list!
+- [x] Day 5 - Someone stole Santa's gift list!
 - [ ] Day 6 - Be careful with what you wish on a Christmas night
 - [ ] Day 7 - Coal for Christmas
 - [ ] Day 8 - The Grinch Really Did Steal Christmas
