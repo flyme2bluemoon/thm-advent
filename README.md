@@ -11,7 +11,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] Day 3 - Christmas Chaos
 - [x] Day 4 - Santa's watching
 - [x] Day 5 - Someone stole Santa's gift list!
-- [ ] Day 6 - Be careful with what you wish on a Christmas night
+- [x] Day 6 - Be careful with what you wish on a Christmas night
 - [ ] Day 7 - Coal for Christmas
 - [ ] Day 8 - The Grinch Really Did Steal Christmas
 - [ ] Day 9 - What's Under the Christmas Tree?
@@ -432,3 +432,43 @@ In the table we can find the admin's password.
 ```
 admin:EhCNSWzzFP6sc7gB
 ```
+
+## Day 6: Be careful with what you wish on a Christmas night
+
+*Category: Web Exploitation*  
+*Tags: JavaScript*  
+
+> Get familiar with compromising user interactions with vulnerable applications by executing custom javascript code.
+
+IP: `10.10.157.100`  
+Port: `5000`
+
+### Finding the cross-site scripting
+
+![screenshot](day06-be-careful-with-what-you-wish-for-on-a-christmas-night/make_a_wish.png)
+
+#### Stored cross-site scripting
+
+Found in the `enter a wish here` box.
+
+![screenshot](day06-be-careful-with-what-you-wish-for-on-a-christmas-night/stored_xss.png)
+
+#### Reflected cross-site scripting
+
+Found in the `search query` box.
+
+![screenshot](day06-be-careful-with-what-you-wish-for-on-a-christmas-night/reflected_xss.png)
+
+#### How to exploit?
+
+Type the following payload into either of them to see a cross-site scripting pop-up:
+
+```html
+<script>alert("XSS");</script>
+```
+
+### Getting the flag
+
+Well unfortunately, there is no flag for this challenge. So here's a fake flag that I made!
+
+![screenshot](day06-be-careful-with-what-you-wish-for-on-a-christmas-night/fake_flag.png)
