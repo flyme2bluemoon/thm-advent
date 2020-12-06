@@ -6,12 +6,12 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 
 ## Checklist
 
-- [x] Day 1 - A Christmas Crisis
-- [x] Day 2 - The Elf Strikes Back
-- [x] Day 3 - Christmas Chaos
-- [x] Day 4 - Santa's watching
-- [x] Day 5 - Someone stole Santa's gift list!
-- [x] Day 6 - Be careful with what you wish on a Christmas night
+- [x] [Day 1 - A Christmas Crisis](#day-1-a-christmas-crisis)
+- [x] [Day 2 - The Elf Strikes Back](#day-2-the-elf-strikes-back)
+- [x] [Day 3 - Christmas Chaos](#day-3-christmas-chaos)
+- [x] [Day 4 - Santa's watching](#day-4-santas-watching)
+- [x] [Day 5 - Someone stole Santa's gift list!](#day-5-someone-stole-santas-gift-list)
+- [x] [Day 6 - Be careful with what you wish on a Christmas night](#day-6-be-careful-with-what-you-wish-on-a-christmas-night)
 - [ ] Day 7 - Coal for Christmas
 - [ ] Day 8 - The Grinch Really Did Steal Christmas
 - [ ] Day 9 - What's Under the Christmas Tree?
