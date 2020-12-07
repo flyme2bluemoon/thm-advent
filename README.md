@@ -12,13 +12,13 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 4 - Santa's watching](#day-4-santas-watching)
 - [x] [Day 5 - Someone stole Santa's gift list!](#day-5-someone-stole-santas-gift-list)
 - [x] [Day 6 - Be careful with what you wish on a Christmas night](#day-6-be-careful-with-what-you-wish-on-a-christmas-night)
-- [ ] Day 7 - Coal for Christmas
-- [ ] Day 8 - The Grinch Really Did Steal Christmas
-- [ ] Day 9 - What's Under the Christmas Tree?
-- [ ] Day 10 - Anyone can be Santa!
-- [ ] Day 11 - Don't be Elfish!
-- [ ] Day 12 - The Rogue Gnome
-- [ ] Day 13 - Ready, set, elf.
+- [ ] Day 7 - The Grinch Really Did Steal Christmas
+- [ ] Day 8 - What's Under the Christmas Tree?
+- [ ] Day 9 - Anyone can be Santa!
+- [ ] Day 10 - Don't be Elfish!
+- [ ] Day 11 - The Rogue Gnome
+- [ ] Day 12 - Ready, set, elf.
+- [ ] Day 13 - Coal for Christmas
 - [ ] Day 14 - Where's Rudolph?
 - [ ] Day 15 - There's a Python in my stocking!
 - [ ] Day 16 - Help! Where is Santa?
