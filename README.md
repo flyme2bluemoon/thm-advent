@@ -12,7 +12,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 4 - Santa's watching](#day-4-santas-watching)
 - [x] [Day 5 - Someone stole Santa's gift list!](#day-5-someone-stole-santas-gift-list)
 - [x] [Day 6 - Be careful with what you wish on a Christmas night](#day-6-be-careful-with-what-you-wish-on-a-christmas-night)
-- [ ] Day 7 - The Grinch Really Did Steal Christmas
+- [x] [Day 7 - The Grinch Really Did Steal Christmas](#day-7-the-grinch-really-did-steal-christmas)
 - [ ] Day 8 - What's Under the Christmas Tree?
 - [ ] Day 9 - Anyone can be Santa!
 - [ ] Day 10 - Don't be Elfish!
@@ -472,3 +472,108 @@ Type the following payload into either of them to see a cross-site scripting pop
 Well unfortunately, there is no flag for this challenge. So here's a fake flag that I made!
 
 ![screenshot](day06-be-careful-with-what-you-wish-for-on-a-christmas-night/fake_flag.png)
+
+## Day 7: The Grinch Really Did Steal Christmas
+
+> Understand a few of the technologies that power the internet! Use this knowledge to track the activity of the Grinch who stole christmas!
+
+*Category: Networking*  
+*Tags: Wireshark, Packet Analysis*  
+
+File: [aoc-pcaps.zip](day07-the-grinch-really-did-steal-christmas/aoc.pcaps.zip)  
+Prerequesite Software: Wireshark  
+
+### Unzipping
+
+Before we begin, we must unzip the file as follows:
+
+```sh
+cd day07-the-grinch-really-did-steal-christmas/
+unzip aoc-pcaps.zip
+```
+
+And we see that there are 3 `.pcap` files:
+
+```
+Archive:  aoc-pcaps.zip
+  inflating: pcap1.pcap              
+  inflating: pcap2.pcap              
+  inflating: pcap3.pcap 
+```
+
+### pcap1.pcap
+
+#### Open "pcap1.pcap" in Wireshark. What is the IP address that initiates an ICMP/ping?
+
+We open pcap1.pcap in Wireshark and look for the source IP of the ping request.
+
+![screenshot](day07-the-grinch-really-did-steal-christmas/pcap1_ping.png)
+
+We see that `10.11.3.2` is pinging `10.10.15.52`.
+
+#### Filtering to see HTTP GET requests
+
+The `http.request.method == get` filter can be used to only see the HTTP GET requests.  
+
+We can use this filter (`http.request.method == GET && ip.src == 10.10.67.199`) to further narrow it down as needed.  
+
+Sifting through the packets, we can see that `10.10.67.199` read `reindeer-of-the-week`.  
+
+![screenshot](day07-the-grinch-really-did-steal-christmas/reindeer-of-the-week.png)
+
+### pcap2.pcap
+
+#### Find the password used for FTP
+
+We filter the traffic by using the protocol `FTP`.  
+
+![screenshot](day07-the-grinch-really-did-steal-christmas/finding_password.png)
+
+Then we can follow the TCP stream to find the password.  
+
+![screenshot](day07-the-grinch-really-did-steal-christmas/follow_ftp_tcp.png)
+
+The leaked password is: `plaintext_password_fiasco`  
+
+#### What is the name of the protocol that is encrypted?
+
+Looking at the wireshark, we can see the SSH protocol which is encrypted.
+
+![screenshot](day07-the-grinch-really-did-steal-christmas/ssh.png)
+
+### pcap3.pcap
+
+Looking through wireshark, we see a lot of SSH and HTTP traffic. Since SSH is encrypted, the HTTP is more interesting. We see that there is downloading of files specifically a `christmas.zip` file, so we extract that and save it onto out machine for further investigation.
+
+![screenshot](day07-the-grinch-really-did-steal-christmas/export_objects.png)
+
+![screenshot](day07-the-grinch-really-did-steal-christmas/http_object_list.png)
+
+Then we can unzip `christmas.zip`. We find the following files:
+
+```
+Archive:  christmas.zip
+  inflating: AoC-2020.png            
+  inflating: christmas-tree.jpg      
+  inflating: elf_mcskidy_wishlist.txt  
+  inflating: Operation Artic Storm.pdf  
+  inflating: selfie.jpg              
+  inflating: tryhackme_logo_full.svg  
+```
+
+We can read Elf McSkidy's wishlist using the following command:
+
+```
+cat day07-the-grinch-really-did-steal-christmas/christmas/elf_mcskidy_wishlist.txt
+```
+
+And we see the following:
+
+```
+Wish list for Elf McSkidy
+-------------------------
+Budget: £100
+
+x3 Hak 5 Pineapples
+x1 Rubber ducky (to replace Elf McEager)
+```
