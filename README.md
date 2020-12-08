@@ -13,7 +13,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 5 - Someone stole Santa's gift list!](#day-5-someone-stole-santas-gift-list)
 - [x] [Day 6 - Be careful with what you wish on a Christmas night](#day-6-be-careful-with-what-you-wish-on-a-christmas-night)
 - [x] [Day 7 - The Grinch Really Did Steal Christmas](#day-7-the-grinch-really-did-steal-christmas)
-- [ ] Day 8 - What's Under the Christmas Tree?
+- [x] [Day 8 - What's Under the Christmas Tree?](#day-8-whats-under-the-christmas-tree)
 - [ ] Day 9 - Anyone can be Santa!
 - [ ] Day 10 - Don't be Elfish!
 - [ ] Day 11 - The Rogue Gnome
@@ -577,3 +577,58 @@ Budget: £100
 x3 Hak 5 Pineapples
 x1 Rubber ducky (to replace Elf McEager)
 ```
+
+## Day 8: What's Under the Christmas Tree?
+
+*Category: Networking*  
+*Tags: Nmap*  
+
+> Practice the most fundamental stage of penetration testing: information gathering, using industry standard tools/techniques.
+
+IP: `10.10.2.45`
+
+### Running the Nmap scan
+
+We run nmap with the following command:
+
+```sh
+nmap -sC -sV -A -O -oN day08-whats-under-the-christmas-tree/nmap.log 10.10.2.45
+```
+
+And we get the following results:
+
+```
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-12-08 13:15 EST
+Nmap scan report for tbfc.blog (10.10.2.45)
+Host is up (0.11s latency).
+Not shown: 997 closed ports
+PORT     STATE SERVICE       VERSION
+80/tcp   open  http          Apache httpd 2.4.29 ((Ubuntu))
+|_http-generator: Hugo 0.78.2
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: TBFC&#39;s Internal Blog
+2222/tcp open  ssh           OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 cf:c9:99:d0:5c:09:27:cd:a1:a8:1b:c2:b1:d5:ef:a6 (RSA)
+|   256 4c:d4:f9:20:6b:ce:fc:62:99:54:7d:c2:b4:b2:f2:b2 (ECDSA)
+|_  256 d0:e6:72:18:b5:20:89:75:d5:69:74:ac:cc:b8:3b:9b (ED25519)
+3389/tcp open  ms-wbt-server xrdp
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 86.52 seconds
+```
+
+### What ports are open?
+
+- Port 80 for HTTP
+- Port 2222 for SSH
+- Port 3389 for ms-wbt-server
+
+### What Linux Distribution is the box?
+
+`Ubuntu`
+
+### What is the "HTTP-TITLE" for the webserver
+
+`http-title: TBFC&#39;s Internal Blog`
