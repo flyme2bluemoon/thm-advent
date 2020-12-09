@@ -14,7 +14,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 6 - Be careful with what you wish on a Christmas night](#day-6-be-careful-with-what-you-wish-on-a-christmas-night)
 - [x] [Day 7 - The Grinch Really Did Steal Christmas](#day-7-the-grinch-really-did-steal-christmas)
 - [x] [Day 8 - What's Under the Christmas Tree?](#day-8-whats-under-the-christmas-tree)
-- [ ] Day 9 - Anyone can be Santa!
+- [x] [Day 9 - Anyone can be Santa!](#day-9-anyone-can-be-santa)
 - [ ] Day 10 - Don't be Elfish!
 - [ ] Day 11 - The Rogue Gnome
 - [ ] Day 12 - Ready, set, elf.
