@@ -15,7 +15,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 7 - The Grinch Really Did Steal Christmas](#day-7-the-grinch-really-did-steal-christmas)
 - [x] [Day 8 - What's Under the Christmas Tree?](#day-8-whats-under-the-christmas-tree)
 - [x] [Day 9 - Anyone can be Santa!](#day-9-anyone-can-be-santa)
-- [ ] Day 10 - Don't be Elfish!
+- [x] [Day 10 - Don't be Elfish!](#day-10-dont-be-elfish)
 - [ ] Day 11 - The Rogue Gnome
 - [ ] Day 12 - Ready, set, elf.
 - [ ] Day 13 - Coal for Christmas
@@ -743,3 +743,78 @@ THM{even_you_can_be_santa}
 ```
 
 Flag: `THM{even_you_can_be_santa}`
+
+## Day 10: Don't be Elfish!
+
+*Category: Networking*
+*Tags: SMB*
+
+> Get hands-on with Samba, a protocol used for sharing resources like files and printers with other devices.
+
+IP: `10.10.111.123`
+
+### Getting Enum4Linux
+
+[Click here to view `enum4linux.pl` on GitHub](https://github.com/CiscoCXSecurity/enum4linux/blob/master/enum4linux.pl)  
+
+(It can also be found on the THM Attackbox here: `/root/Desktop/Tools/Miscellaneous/enum4linux.pl`)
+
+### Basic Enumeration
+
+We can begin by looking for users and shares on the box using this command:
+
+```
+./enum4linux.pl -U -S 10.10.111.123
+```
+
+And we find the following 3 users:
+
+```
+ ============================== 
+|    Users on 10.10.111.123    |
+ ============================== 
+index: 0x1 RID: 0x3e8 acb: 0x00000010 Account: elfmcskidy       Name:   Desc: 
+index: 0x2 RID: 0x3ea acb: 0x00000010 Account: elfmceager       Name: elfmceager        Desc: 
+index: 0x3 RID: 0x3e9 acb: 0x00000010 Account: elfmcelferson    Name:   Desc: 
+
+user:[elfmcskidy] rid:[0x3e8]
+user:[elfmceager] rid:[0x3ea]
+user:[elfmcelferson] rid:[0x3e9]
+```
+
+We also find the following 4 shares:
+
+```
+ ========================================== 
+|    Share Enumeration on 10.10.111.123    |
+ ========================================== 
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        tbfc-hr         Disk      tbfc-hr
+        tbfc-it         Disk      tbfc-it
+        tbfc-santa      Disk      tbfc-santa
+        IPC$            IPC       IPC Service (tbfc-smb server (Samba, Ubuntu))
+```
+
+### Connecting to the Samba server
+
+We can use smbclient to connect to the Samba servers. After some testing, I noticed that the tbfc-santa share doesn't require a password to login as root.
+
+```
+smbclient -U root //10.10.111.123/tbfc-santa
+```
+
+After logging in, we find the `jingle-tunes` directory and the `note_from_mcskidy.txt` file.
+
+```
+smb: \> ls
+  .                                   D        0  Wed Nov 11 21:12:07 2020
+  ..                                  D        0  Wed Nov 11 20:32:21 2020
+  jingle-tunes                        D        0  Wed Nov 11 21:10:41 2020
+  note_from_mcskidy.txt               N      143  Wed Nov 11 21:12:07 2020
+
+                10252564 blocks of size 1024. 5200032 blocks available
+```
+
+There is nothing else for us to look at. This is also the end of this challenge.
