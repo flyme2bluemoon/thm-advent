@@ -116,13 +116,3 @@ int main(int argc, char *argv[])
   user.shell = "/bin/bash";
 
 }
-
-/*************************************************
-// HAHA! Too bad Santa! I, the Grinch, got here 
-// before you did! I helped myself to some of
-// the goodies here, but you can still enjoy
-// some half eaten cookies and this leftover
-// milk! Why dont you try and refill it yourself!
-//   - Yours Truly,
-//         The Grinch
-//*************************************************/
