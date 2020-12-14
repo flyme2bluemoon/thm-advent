@@ -19,7 +19,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 11 - The Rogue Gnome](#day-11-the-rogue-gnome)
 - [x] [Day 12 - Ready, set, elf.](#day-12-ready-set-elf)
 - [x] [Day 13 - Coal for Christmas](#day-13-coal-for-christmas)
-- [ ] Day 14 - Where's Rudolph?
+- [x] [Day 14 - Where's Rudolph?](#day-14-wheres-rudolph)
 - [ ] Day 15 - There's a Python in my stocking!
 - [ ] Day 16 - Help! Where is Santa?
 - [ ] Day 17 - ReverseELFneering
@@ -1185,6 +1185,7 @@ Although, I assume there is another flag2.txt or something on this box, unfortun
 
 *Category: Special*
 *Tags: DirtyCow, Privilege Escalation*
+*Special Contributer: John Hammond*
 
 > Kris Kringle checked his Naughty or Nice List, and he saw that more than a few sysadmins were on the naughty list! He went down the chimney and found old, outdated software, deprecated technologies and a whole environment that was so dirty! Take a look at this server and help prove that this house really deserves coal for Christmas!
 
@@ -1462,3 +1463,111 @@ firefart@christmas:~# tree | md5sum
 ```
 
 Flag: `8b16f00dd3b51efadb02c1df7f8427cc`
+
+## Day 14: Where's Rudolph
+
+*Category: Special*
+*Tags: OSINT*
+*Special Contributor: The Cyber Mentor*
+
+> Twas the night before Christmas and Rudolph is lost Now Santa must find him, no matter the cost You have been hired to bring Rudolph back How are your OSINT skills? Follow Rudolph's tracks...
+
+### Reddit
+
+All we are given is a Reddit username: `IGuidetheClaus2020`
+
+We can view his Reddit account here: `https://www.reddit.com/user/IGuidetheClaus2020`  
+And we can view his comment history here: `https://www.reddit.com/user/IGuidetheClaus2020/comments/`
+
+Looking through his comment history, we can see that he was born in `Chicago`.  
+
+If we do a Google search for `robert the creator of rudolph`, we find that Robert's full name is `Robert L. May`  
+
+If we search his username of Google, we find his Twitter account: `@IGuideClaus2020`
+
+### Twitter
+
+We can view his Twitter account here: `https://twitter.com/IGuideClaus2020`
+
+We learn that Rudolph's favorite TV show is the `Bachelorette`  
+
+### Photo EXIF Data
+
+![chicago](day14-wheres-rudolph/lights-festival-website.jpg)
+
+If we reverse Google Image search for the parade image, we find this [news article](https://www.thompsoncoburn.com/news-events/news/2019-12-09/thompson-coburn-floats-down-michigan-avenue-in-first-magnificent-mile-lights-festival-appearance) that tells us that the parade took place in `Chicago, IL`.
+
+We can run `exiftool` to get more info about the image.
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day14-wheres-rudolph$ wget https://tcm-sec.com/wp-content/uploads/2020/11/lights-festival-website.jpg
+--2020-12-14 11:31:29--  https://tcm-sec.com/wp-content/uploads/2020/11/lights-festival-website.jpg
+Resolving tcm-sec.com (tcm-sec.com)... 70.32.23.61
+Connecting to tcm-sec.com (tcm-sec.com)|70.32.23.61|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 51161 (50K) [image/jpeg]
+Saving to: ‘lights-festival-website.jpg’
+
+lights-festival-website.jpg                             100%[============================================================================================================================>]  49.96K  --.-KB/s    in 0.07s   
+
+2020-12-14 11:31:29 (693 KB/s) - ‘lights-festival-website.jpg’ saved [51161/51161]
+
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day14-wheres-rudolph$ exiftool lights-festival-website.jpg 
+ExifTool Version Number         : 11.88
+File Name                       : lights-festival-website.jpg
+Directory                       : .
+File Size                       : 50 kB
+File Modification Date/Time     : 2020:11:25 10:07:43-05:00
+File Access Date/Time           : 2020:12:14 11:32:24-05:00
+File Inode Change Date/Time     : 2020:12:14 11:31:29-05:00
+File Permissions                : rw-rw-r--
+File Type                       : JPEG
+File Type Extension             : jpg
+MIME Type                       : image/jpeg
+JFIF Version                    : 1.01
+X Resolution                    : 72
+Y Resolution                    : 72
+Exif Byte Order                 : Big-endian (Motorola, MM)
+Resolution Unit                 : inches
+Y Cb Cr Positioning             : Centered
+Copyright                       : {FLAG}ALWAYSCHECKTHEEXIFD4T4
+Exif Version                    : 0231
+Components Configuration        : Y, Cb, Cr, -
+User Comment                    : Hi. :)
+Flashpix Version                : 0100
+GPS Latitude Ref                : North
+GPS Longitude Ref               : West
+Image Width                     : 650
+Image Height                    : 510
+Encoding Process                : Baseline DCT, Huffman coding
+Bits Per Sample                 : 8
+Color Components                : 3
+Y Cb Cr Sub Sampling            : YCbCr4:2:0 (2 2)
+Image Size                      : 650x510
+Megapixels                      : 0.332
+GPS Latitude                    : 41 deg 53' 30.53" N
+GPS Longitude                   : 87 deg 37' 27.40" W
+GPS Position                    : 41 deg 53' 30.53" N, 87 deg 37' 27.40" W
+```
+
+We can find the coordinates of the photo to be `41.891815, -87.624277`.  
+
+Ooh, we also find a flag!
+
+Flag: `{FLAG}ALWAYSCHECKTHEEXIFD4T4`
+
+### Finding Rudolph's Password
+
+On Rudolph's Twitter, we find his email: `rudolphthered@hotmail.com`  
+
+We can use `https://scylla.sh/api` to find a password. `rudolphthered@hotmail.com:spygame`.
+
+### Finding Rudolph's location
+
+We can use [Google Maps](https://www.google.com/maps/place/41%C2%B053'30.5%22N+87%C2%B037'27.4%22W/@41.8918056,-87.6264665,17z/data=!3m1!4b1!4m5!3m4!1s0x0:0x0!8m2!3d41.8918056!4d-87.6242778) and the coordinates to find the Hotel that Rudolph is in.
+
+![screenshot](day14-wheres-rudolph/google_maps.png)
+
+![screenshot](day14-wheres-rudolph/apple_maps.png)
+
+Turns out, the address for the hotel is `540 North Michigan Avenue, Chicago, Illinois 60611 USA`
