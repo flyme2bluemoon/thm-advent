@@ -18,7 +18,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 10 - Don't be Elfish!](#day-10-dont-be-elfish)
 - [x] [Day 11 - The Rogue Gnome](#day-11-the-rogue-gnome)
 - [x] [Day 12 - Ready, set, elf.](#day-12-ready-set-elf)
-- [x] [Day 13 - Coal for Christmas](#day13-coal-for-christmas)
+- [x] [Day 13 - Coal for Christmas](#day-13-coal-for-christmas)
 - [ ] Day 14 - Where's Rudolph?
 - [ ] Day 15 - There's a Python in my stocking!
 - [ ] Day 16 - Help! Where is Santa?
