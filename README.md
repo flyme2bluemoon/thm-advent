@@ -20,7 +20,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 12 - Ready, set, elf.](#day-12-ready-set-elf)
 - [x] [Day 13 - Coal for Christmas](#day-13-coal-for-christmas)
 - [x] [Day 14 - Where's Rudolph?](#day-14-wheres-rudolph)
-- [ ] Day 15 - There's a Python in my stocking!
+- [x] [Day 15 - There's a Python in my stocking!](#day-15-theres-a-python-in-my-stocking)
 - [ ] Day 16 - Help! Where is Santa?
 - [ ] Day 17 - ReverseELFneering
 - [ ] Day 18 - The Bits of the Christmas
