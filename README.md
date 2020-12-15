@@ -1571,3 +1571,51 @@ We can use [Google Maps](https://www.google.com/maps/place/41%C2%B053'30.5%22N+8
 ![screenshot](day14-wheres-rudolph/apple_maps.png)
 
 Turns out, the address for the hotel is `540 North Michigan Avenue, Chicago, Illinois 60611 USA`
+
+## Day 15: There's a Python in my stocking!
+
+*Category: Scripting*
+*Tags: Python*
+
+>Utilise Santa's favourite type of snake: Pythons to become a scripting master expert!
+
+### What's the output of `True + True`?
+
+Since the value of True is 1 and 1 + 1 == 2, the Python interpreter says that `True + True == 2`
+
+```
+>>> True + True
+2
+```
+
+### What's the database for installing other peoples libraries called?
+
+The [Python Package Index (PyPi)](https://pypi.org/) is the database connected to `pip`/`pip3`.
+
+### What is the output of bool("False")?
+
+`"False"` is actually a string and the boolean representation of a string is `True`
+
+```
+>>> bool("False")
+True
+```
+
+### What library lets us download the HTML of a webpage?
+
+The `requests` library allows us to send HTTP requests in Python.
+
+It can be installed by running `pip3 install requests`.
+
+### What is the output of the program provided in "Code to analyse for Question 5" in today's material?
+
+Easiest way to find out is just to run it.
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day15-theres-a-python-in-my-stocking$ python3 script.py 
+[1, 2, 3, 6]
+```
+
+#### What causes the previous task to output that?
+
+In Python, and many other languages, lists are just a pointer to an address in memory and when we set one list equal to another we are pointing to the same list in memory. This is called `pass by reference`.
