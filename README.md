@@ -22,7 +22,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 14 - Where's Rudolph?](#day-14-wheres-rudolph)
 - [x] [Day 15 - There's a Python in my stocking!](#day-15-theres-a-python-in-my-stocking)
 - [x] [Day 16 - Help! Where is Santa?](#day-16-help-where-is-santa)
-- [ ] Day 17 - ReverseELFneering
+- [x] [Day 17 - ReverseELFneering](#day-17-reverse-elfneering)
 - [ ] Day 18 - The Bits of the Christmas
 - [ ] Day 19 - The Naughty or Nice List
 - [ ] Day 20 - PowershELlF to the rescue
@@ -1691,4 +1691,249 @@ And we get the following output:
 ```
 API Key: 57
 {"item_id":57,"q":"Winter Wonderland, Hyde Park, London."}
+```
+
+## Day 17: ReverseELFneering
+
+*Category: Reverse Engineering*
+*Tags: GDB, Linux*
+
+>Learn the basics of assembly and reverse engineer your first application!
+
+IP: `10.10.197.43`
+
+### Getting started
+
+We are given the following credentials: `elfmceager:adventofcyber`. We can either work on the target instance using SSH or pull the files using SCP and work on our own machine.
+
+```
+ssh elfmceager@10.10.197.43
+```
+OR
+```
+scp elfmceager@10.10.197.43:~/file1 .
+scp elfmceager@10.10.197.43:~/challenge1 .
+```
+
+### Practicing with file1
+
+First we open the binary in radare2 debugging mode using this command: `r2 -d ./file1`
+
+Next, we ask r2 to analyse the program with `aa`:
+```
+[0x00400a30]> aa
+[ WARNING : block size exceeding max block size at 0x006ba220
+[+] Try changing it with e anal.bb.maxsize
+ WARNING : block size exceeding max block size at 0x006bc860
+[+] Try changing it with e anal.bb.maxsize
+[x] Analyze all flags starting with sym. and entry0 (aa)
+```
+
+Then, we can look for the main function and set a breakpoint.
+```
+[0x00400a30]> afl | grep main
+0x00400b4d    1 68           sym.main
+0x00400e10   10 1007 -> 219  sym.__libc_start_main
+0x00403870   39 661  -> 629  sym._nl_find_domain
+0x00403b10  308 5366 -> 5301 sym._nl_load_domain
+0x00415fe0    1 43           sym._IO_switch_to_main_get_area
+0x0044cf00    1 8            sym._dl_get_dl_main_map
+0x00470520    1 49           sym._IO_switch_to_main_wget_area
+0x0048fae0    7 73   -> 69   sym._nl_finddomain_subfreeres
+0x0048fb30   16 247  -> 237  sym._nl_unload_domain
+[0x00400a30]> pdf @main
+            ;-- main:
+/ (fcn) sym.main 68
+|   sym.main ();
+|           ; var int local_ch @ rbp-0xc
+|           ; var int local_8h @ rbp-0x8
+|           ; var int local_4h @ rbp-0x4
+|              ; DATA XREF from 0x00400a4d (entry0)
+|           0x00400b4d      55             push rbp
+|           0x00400b4e      4889e5         mov rbp, rsp
+|           0x00400b51      4883ec10       sub rsp, 0x10
+|           0x00400b55      c745f4040000.  mov dword [local_ch], 4
+|           0x00400b5c      c745f8050000.  mov dword [local_8h], 5
+|           0x00400b63      8b55f4         mov edx, dword [local_ch]
+|           0x00400b66      8b45f8         mov eax, dword [local_8h]
+|           0x00400b69      01d0           add eax, edx
+|           0x00400b6b      8945fc         mov dword [local_4h], eax
+|           0x00400b6e      8b4dfc         mov ecx, dword [local_4h]
+|           0x00400b71      8b55f8         mov edx, dword [local_8h]
+|           0x00400b74      8b45f4         mov eax, dword [local_ch]
+|           0x00400b77      89c6           mov esi, eax
+|           0x00400b79      488d3d881409.  lea rdi, qword str.the_value_of_a_is__d__the_value_of_b_is__d_and_the_value_of_c_is__d ; 0x492008 ; "the value of a is %d, the value of b is %d and the value of c is %d"
+|           0x00400b80      b800000000     mov eax, 0
+|           0x00400b85      e8f6ea0000     call sym.__printf
+|           0x00400b8a      b800000000     mov eax, 0
+|           0x00400b8f      c9             leave
+\           0x00400b90      c3             ret
+[0x00400a30]> db 0x00400b55
+```
+
+If we run the program, we see we immediately hit the breakpoint
+
+```
+[0x00400a30]> dc
+hit breakpoint at: 400b55
+```
+
+We can check on the value of `local_ch` before and after the "`mov dword [local_ch], 4`" instruction.
+
+```
+[0x00400b55]> px @ rbp-0xc
+- offset -       0 1  2 3  4 5  6 7  8 9  A B  C D  E F  0123456789ABCDEF
+0x7ffc4fef1ba4  0000 0000 1890 6b00 0000 0000 7018 4000  ......k.....p.@.
+0x7ffc4fef1bb4  0000 0000 1911 4000 0000 0000 0000 0000  ......@.........
+0x7ffc4fef1bc4  0000 0000 0000 0000 0100 0000 d81c ef4f  ...............O
+0x7ffc4fef1bd4  fc7f 0000 4d0b 4000 0000 0000 0000 0000  ....M.@.........
+0x7ffc4fef1be4  0000 0000 0600 0000 5500 0000 5000 0000  ........U...P...
+0x7ffc4fef1bf4  0400 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c04  0000 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c14  0000 0000 0000 0000 0000 0000 0004 4000  ..............@.
+0x7ffc4fef1c24  0000 0000 e9e8 fb41 e733 73ab 1019 4000  .......A.3s...@.
+0x7ffc4fef1c34  0000 0000 0000 0000 0000 0000 1890 6b00  ..............k.
+0x7ffc4fef1c44  0000 0000 0000 0000 0000 0000 e9e8 9b46  ...............F
+0x7ffc4fef1c54  b9ac 8b54 e9e8 8f50 e733 73ab 0000 0000  ...T...P.3s.....
+0x7ffc4fef1c64  0000 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c74  0000 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c84  0000 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c94  0000 0000 0000 0000 0000 0000 0000 0000  ................
+[0x00400b55]> ds
+[0x00400b55]> px @ rbp-0xc
+- offset -       0 1  2 3  4 5  6 7  8 9  A B  C D  E F  0123456789ABCDEF
+0x7ffc4fef1ba4  0400 0000 1890 6b00 0000 0000 7018 4000  ......k.....p.@.
+0x7ffc4fef1bb4  0000 0000 1911 4000 0000 0000 0000 0000  ......@.........
+0x7ffc4fef1bc4  0000 0000 0000 0000 0100 0000 d81c ef4f  ...............O
+0x7ffc4fef1bd4  fc7f 0000 4d0b 4000 0000 0000 0000 0000  ....M.@.........
+0x7ffc4fef1be4  0000 0000 0600 0000 5500 0000 5000 0000  ........U...P...
+0x7ffc4fef1bf4  0400 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c04  0000 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c14  0000 0000 0000 0000 0000 0000 0004 4000  ..............@.
+0x7ffc4fef1c24  0000 0000 e9e8 fb41 e733 73ab 1019 4000  .......A.3s...@.
+0x7ffc4fef1c34  0000 0000 0000 0000 0000 0000 1890 6b00  ..............k.
+0x7ffc4fef1c44  0000 0000 0000 0000 0000 0000 e9e8 9b46  ...............F
+0x7ffc4fef1c54  b9ac 8b54 e9e8 8f50 e733 73ab 0000 0000  ...T...P.3s.....
+0x7ffc4fef1c64  0000 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c74  0000 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c84  0000 0000 0000 0000 0000 0000 0000 0000  ................
+0x7ffc4fef1c94  0000 0000 0000 0000 0000 0000 0000 0000  ................
+[0x00400b55]> 
+```
+
+We can see how the variable's value has changed.
+
+### Moving on to challenge1
+
+Well now that we know the basics of `radare2` (well I hope you do cause I don't lol)...
+
+So instead of using `radare2` to solve challenge1, I opted to use GDB with the pwndbg add-on.
+
+However, I still needed to use `r2` to see what the questions were referring to.
+
+```
+|           ; var int local_ch @ rbp-0xc
+|           ; var int local_8h @ rbp-0x8
+|           ; var int local_4h @ rbp-0x4
+```
+
+Now, let's begin! Firstly, I started gdb using the following command:
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day17-reverseelfneering$ gdb challenge1
+```
+
+Then, I disassembled it to see the assembly code:
+
+```
+pwndbg> disassemble main
+Dump of assembler code for function main:
+   0x0000000000400b4d <+0>:     push   rbp
+   0x0000000000400b4e <+1>:     mov    rbp,rsp
+   0x0000000000400b51 <+4>:     mov    DWORD PTR [rbp-0xc],0x1
+   0x0000000000400b58 <+11>:    mov    DWORD PTR [rbp-0x8],0x6
+   0x0000000000400b5f <+18>:    mov    eax,DWORD PTR [rbp-0xc]
+   0x0000000000400b62 <+21>:    imul   eax,DWORD PTR [rbp-0x8]
+   0x0000000000400b66 <+25>:    mov    DWORD PTR [rbp-0x4],eax
+   0x0000000000400b69 <+28>:    mov    eax,0x0
+   0x0000000000400b6e <+33>:    pop    rbp
+   0x0000000000400b6f <+34>:    ret    
+End of assembler dump.
+```
+
+Lets set some breakpoints after the instructions we want to see the results of.
+
+```
+pwndbg> break *0x0000000000400b58
+Breakpoint 1 at 0x400b58
+pwndbg> break *0x0000000000400b66
+Breakpoint 2 at 0x400b66
+pwndbg> break *0x0000000000400b69
+Breakpoint 3 at 0x400b69
+```
+
+When we hit `Breakpoint 1, 0x0000000000400b58 in main`, we examine the value of `rbp-0xc` (aka `local_ch`) and continue to program execution.
+
+```
+pwndbg> x $rbp-0xc
+0x7fffffffdf04: 0x00000001
+pwndbg> c
+Continuing.
+```
+
+When we hit `Breakpoint 2, 0x0000000000400b66 in main`, we look for the value of `eax` and continue the program execution.
+
+```
+pwndbg> info registers eax
+eax            0x6                 6
+pwndbg> c
+Continuing.
+```
+
+When we hit `Breakpoint 3, 0x0000000000400b69 in main`, we look for the value of `rbp-0x4` (aka `local_4h`) and continue the program execution.
+
+```
+pwndbg> x $rbp-0x4
+0x7fffffffdf0c: 0x00000006
+pwndbg> c
+Continuing.
+```
+
+Then, we see that the program terminates:
+```
+[Inferior 1 (process 9100) exited normally]
+```
+
+Overall, we were able to answer all the questions.
+
+#### What is the value of local_ch when its corresponding movl instruction is called (first if multiple)?
+
+The value of `local_ch` was `0x00000001` which is hexadecimal for `1`.
+
+#### What is the value of eax when the imull instruction is called?
+
+The value of `eax` was `0x6` which is hexadecimal for `6`.
+
+#### What is the value of local_4h before eax is set to 0?
+
+The value of `local_4h` was `0x00000006` which is hexadecimal for `6`.
+
+### Side note
+
+Since this was a relatively simple binary we could have gotten the answers just by reading the assembly code.
+
+Here, we see the value `0x1` being put into `rbp-0xc`.
+```
+0x0000000000400b51 <+4>:     mov    DWORD PTR [rbp-0xc],0x1
+``1
+
+Next we see the value `0x6` being put into `rbp-0x8` which is later put into `eax`.
+```
+0x0000000000400b58 <+11>:    mov    DWORD PTR [rbp-0x8],0x6
+0x0000000000400b62 <+21>:    imul   eax,DWORD PTR [rbp-0x8]
+```
+
+Lastly, we see the value of `eax` (which is `0x6`) being put into `rbp-0x4`.
+```
+0x0000000000400b66 <+25>:    mov    DWORD PTR [rbp-0x4],eax
 ```
