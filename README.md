@@ -635,7 +635,7 @@ Nmap done: 1 IP address (1 host up) scanned in 86.52 seconds
 
 ## Day 9: Anyone can be Santa!
 
-*Category: Networking*
+*Category: Networking*  
 *Tags: FTP*
 
 >Discover a common misconfiguration on file transfer servers, and understand how it may be abused.
@@ -746,7 +746,7 @@ Flag: `THM{even_you_can_be_santa}`
 
 ## Day 10: Don't be Elfish!
 
-*Category: Networking*
+*Category: Networking*  
 *Tags: SMB*
 
 > Get hands-on with Samba, a protocol used for sharing resources like files and printers with other devices.
@@ -821,7 +821,7 @@ There is nothing else for us to look at. This is also the end of this challenge.
 
 ## Day 11: The Rogue Gnome
 
-*Category: Networking*
+*Category: Networking*  
 *Tags: Privilege Escalation, Linux*
 
 > We've got initial access, but now what? Learn some of the common linux privilege escalation techniques used to gain permissions to things that we shouldn't...
@@ -914,7 +914,7 @@ Flag: `thm{2fb10afe933296592}`
 
 ## Day 12: Ready, set, elf!
 
-*Category: Networking*
+*Category: Networking*  
 *Tags: Public Exploits*
 
 > Learn how vulnerabilities can be identified, use public knowledgebases to search for exploits and leverage these on this Windows box; So quit slackin' and get whackin'!
@@ -1183,8 +1183,8 @@ Although, I assume there is another flag2.txt or something on this box, unfortun
 
 ## Day 13: Coal for Christmas
 
-*Category: Special*
-*Tags: DirtyCow, Privilege Escalation*
+*Category: Special*  
+*Tags: DirtyCow, Privilege Escalation*  
 *Special Contributer: John Hammond*
 
 > Kris Kringle checked his Naughty or Nice List, and he saw that more than a few sysadmins were on the naughty list! He went down the chimney and found old, outdated software, deprecated technologies and a whole environment that was so dirty! Take a look at this server and help prove that this house really deserves coal for Christmas!
@@ -1466,8 +1466,8 @@ Flag: `8b16f00dd3b51efadb02c1df7f8427cc`
 
 ## Day 14: Where's Rudolph
 
-*Category: Special*
-*Tags: OSINT*
+*Category: Special*  
+*Tags: OSINT*  
 *Special Contributor: The Cyber Mentor*
 
 > Twas the night before Christmas and Rudolph is lost Now Santa must find him, no matter the cost You have been hired to bring Rudolph back How are your OSINT skills? Follow Rudolph's tracks...
@@ -1574,7 +1574,7 @@ Turns out, the address for the hotel is `540 North Michigan Avenue, Chicago, Ill
 
 ## Day 15: There's a Python in my stocking!
 
-*Category: Scripting*
+*Category: Scripting*  
 *Tags: Python*
 
 >Utilise Santa's favourite type of snake: Pythons to become a scripting master expert!
@@ -1622,7 +1622,7 @@ In Python, and many other languages, lists are just a pointer to an address in m
 
 ## Day 16: Help! Where is Santa?
 
-*Category: Scripting*
+*Category: Scripting*  
 *Tags: Requests*
 
 >Santa appears to have accidentally told Rudolph to take off, leaving the elves stranded! Utilise Python and the power of APIs to track where Santa is, and help the elves get back to their sleigh!
@@ -1695,7 +1695,7 @@ API Key: 57
 
 ## Day 17: ReverseELFneering
 
-*Category: Reverse Engineering*
+*Category: Reverse Engineering*  
 *Tags: GDB, Linux*
 
 >Learn the basics of assembly and reverse engineer your first application!
@@ -1940,5 +1940,5 @@ Lastly, we see the value of `eax` (which is `0x6`) being put into `rbp-0x4`.
 
 ## Day 18: The Bits of the Christmas
 
-*Category: Reverse Engineering*
+*Category: Reverse Engineering*  
 *Tags: GDB, Linux*
