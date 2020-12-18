@@ -1942,3 +1942,34 @@ Lastly, we see the value of `eax` (which is `0x6`) being put into `rbp-0x4`.
 
 *Category: Reverse Engineering*  
 *Tags: GDB, Linux*
+
+>Continuing from yesterday, practice your reverse engineering.
+
+IP: `10.10.120.124`
+
+### Connecting to the Windows Machine using RDP
+
+I used Microsoft Remote Desktop for macOS to connect to the target machine. I logged in with the credentials `cmnatic:Adventofcyber!`.
+
+```sh
+# By the way, here is the command to forward a port the target machine through a virtual machine to the host machine.
+ssh -L 3389:IP_OF_TARGET_MACHINE:3389 IP_OF_VIRTUAL_MACHINE
+```
+
+![screenshot](day18-the-bits-of-the-christmas/rdp.png)
+
+### Getting Santa's password and the flag!
+
+Next, we can open up the binary in ILSpy. After poking around, I found the following:
+
+![screenshot](day18-the-bits-of-the-christmas/ilspy.png)
+
+We can see the santa's password is `santapassword321`.
+
+### Although technically the flag's in the previous screenshot...
+
+I still wanted to run the executable application. So I opened it up and enter the password we found.
+
+![screenshot](day18-the-bits-of-the-christmas/success.png)
+
+Flag: `thm{046af}`
