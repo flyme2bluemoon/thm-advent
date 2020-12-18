@@ -23,7 +23,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 15 - There's a Python in my stocking!](#day-15-theres-a-python-in-my-stocking)
 - [x] [Day 16 - Help! Where is Santa?](#day-16-help-where-is-santa)
 - [x] [Day 17 - ReverseELFneering](#day-17-reverse-elfneering)
-- [ ] Day 18 - The Bits of the Christmas
+- [x] [Day 18 - The Bits of the Christmas](#day-18-the-bits-of-the-christmas)
 - [ ] Day 19 - The Naughty or Nice List
 - [ ] Day 20 - PowershELlF to the rescue
 - [ ] Day 21 - Time for some ELForensics
@@ -1925,7 +1925,7 @@ Since this was a relatively simple binary we could have gotten the answers just 
 Here, we see the value `0x1` being put into `rbp-0xc`.
 ```
 0x0000000000400b51 <+4>:     mov    DWORD PTR [rbp-0xc],0x1
-``1
+```
 
 Next we see the value `0x6` being put into `rbp-0x8` which is later put into `eax`.
 ```
@@ -1937,3 +1937,8 @@ Lastly, we see the value of `eax` (which is `0x6`) being put into `rbp-0x4`.
 ```
 0x0000000000400b66 <+25>:    mov    DWORD PTR [rbp-0x4],eax
 ```
+
+## Day 18: The Bits of the Christmas
+
+*Category: Reverse Engineering*
+*Tags: GDB, Linux*
