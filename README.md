@@ -24,7 +24,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 16 - Help! Where is Santa?](#day-16-help-where-is-santa)
 - [x] [Day 17 - ReverseELFneering](#day-17-reverse-elfneering)
 - [x] [Day 18 - The Bits of the Christmas](#day-18-the-bits-of-the-christmas)
-- [ ] Day 19 - The Naughty or Nice List
+- [x] [Day 19 - The Naughty or Nice List](#day-19-the-naughty-or-nice-list)
 - [ ] Day 20 - PowershELlF to the rescue
 - [ ] Day 21 - Time for some ELForensics
 - [ ] Day 22 - Elf McEager becomes CyberElf
@@ -1973,3 +1973,65 @@ I still wanted to run the executable application. So I opened it up and enter th
 ![screenshot](day18-the-bits-of-the-christmas/success.png)
 
 Flag: `thm{046af}`
+
+## Day 19: The Naughty of Nice List
+
+*Category: Special*  
+*Tags: Web, SSRF*  
+*Special Contributer: Tib3rius*  
+
+> Santa has released a web app that lets the children of the world check whether they are currently on the naughty or nice list. Unfortunately the elf who coded it exposed more things than she thought. Can you access the list administration and ensure that every child gets a present from Santa this year?
+
+IP: `10.10.219.138`
+
+### Finding the vulnerability
+
+![screenshot](day19-the-naughty-or-nice-list/index.png)
+
+Turns out, this page is vulnerable to Server Side Request Forgery.
+
+After searching for a name, we are redirected to a link similar to `http://10.10.219.138/?proxy=http%3A%2F%2Flist.hohoho%3A8080%2Fsearch.php%3Fname%3Dbluemoon`.
+
+If we URL Decode the proxy parameter we get `http://list.hohoho:8080/search.php?name=bluemoon`
+
+So this kinda looks like a URL. However list.hohoho is not a valid URL. This must be the hostname of some backend machine. Let's try poking around. If try to visit `http://list.hohoho:80` by accessing `http://10.10.219.138/?proxy=http%3A%2F%2Flist.hohoho%3A80`, we get `Failed to connect to list.hohoho port 80: Connection refused`. Looks like port 80 is closed. If we try to visit the SSH port using the same technique by visiting `http://10.10.219.138/?proxy=http%3A%2F%2Flist.hohoho%3A22` we get `Recv failure: Connection reset by peer` which means that the SSH port is open but failed to connect since we are sending an HTTP request to the SSH port which surprisingly and unfortunately does not work.
+
+So next, let's check out what's running on the machine's localhost by visiting `http://10.10.219.138/?proxy=http%3A%2F%2Flocalhost`. Unfortunately, it their "security team" blocked our attempt with the message `Your search has been blocked by our security team.`.
+
+But can we circumvent this? It turns out we can! The "security team" only ensures that the hostname starts with `list.hohoho`. However, we can find a domain that resolves itself and every subdomain to `127.0.0.1` (localhost). It turns out `localtest.me` resolves every subdomain to `127.0.0.1`. So, we can access the site on `localhost:80` by visiting `http://10.10.219.138/?proxy=http%3A%2F%2Flist.hohoho.localtest.me`.
+
+Oh and by the way, here is the DNS lookup for `localtest.me`:
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day19-the-naughty-or-nice-list$ nslookup localtest.me
+Server:         127.0.0.53
+Address:        127.0.0.53#53
+
+Non-authoritative answer:
+Name:   localtest.me
+Address: 127.0.0.1
+```
+
+We also found a message from Elf McSkidy!
+
+```
+Santa,
+
+If you need to make any changes to the Naughty or Nice list, you need to login.
+
+I know you have trouble remembering your password so here it is: Be good for goodness sake!
+
+- Elf McSkidy 
+```
+
+So it turns out Santa's password is: `Be good for goodness sake!`  
+We can also guess that his username is either `admin`, `santa` or something like that. It turns out it was `Santa`.
+
+### Getting the flag
+
+Now, we can log in with Santa's credentials and we are greeted with an admin panel.
+
+![screenshot](day19-the-naughty-or-nice-list/list.png)
+
+If we click the `DELETE NAUGHTY LIST` button, we get the flag in a JavaScript alert!
+
+Flag: `THM{EVERYONE_GETS_PRESENTS}`
