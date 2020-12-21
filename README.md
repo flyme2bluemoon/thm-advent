@@ -1974,7 +1974,7 @@ I still wanted to run the executable application. So I opened it up and enter th
 
 Flag: `thm{046af}`
 
-## Day 19: The Naughty of Nice List
+## Day 19: The Naughty or Nice List
 
 *Category: Special*  
 *Tags: Web, SSRF*  
