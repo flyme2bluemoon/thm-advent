@@ -26,7 +26,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 18 - The Bits of the Christmas](#day-18-the-bits-of-the-christmas)
 - [x] [Day 19 - The Naughty or Nice List](#day-19-the-naughty-or-nice-list)
 - [x] [Day 20 - PowershELlF to the rescue](#day-20-powershellf-to-the-rescue)
-- [ ] Day 21 - Time for some ELForensics
+- [x] [Day 21 - Time for some ELForensics](#day-21-time-for-some-elforensics)
 - [ ] Day 22 - Elf McEager becomes CyberElf
 - [ ] Day 23 - The Grinch strikes again!
 - [ ] Day 24 - The Trial Before Christmas
@@ -2180,3 +2180,117 @@ PS C:\Windows\System32\3lfthr3e> Select-String 2.txt -Pattern "redryder*"
 
 2.txt:558704:redryderbbgun
 ```
+
+## Day 21: Time for some ELForensics
+
+*Category: Blue Teaming*  
+*Tags: Forensics*
+
+> Understand how to use PowerForensics to find clues as to where the naughty list was hidden.
+
+IP: `10.10.154.191`
+
+### Connecting via RDP
+
+We are given credentials `littlehelper:iLove5now!` to connect to the Windows machine using RDP.
+
+![screenshot](day21-time-for-some-elforensics/rdp_login.png)
+
+And we land into a Windows desktop!
+
+![screenshot](day21-time-for-some-elforensics/desktop.png)
+
+### Getting started
+
+First we open up Powershell (which is conviniently already in the TaskBar) and enter the Documents directory.
+
+```
+PS C:\Users\littlehelper> cd Documents
+PS C:\Users\littlehelper\Documents>
+```
+
+### Contents of the "`db file hash.txt`" file.
+
+We can use the `Get-Content` cmdlet or the `gc`, `cat` or `type` aliases to get the contents of the text file.
+```
+PS C:\Users\littlehelper\Documents> cat "db file hash.txt"
+Filename:       db.exe
+MD5 Hash:       596690FFC54AB6101932856E6A78E3A1
+```
+
+### Getting the hash of `deebee.exe`
+
+We can use the `Get-FileHash` cmdlet to get the MD5 hash of `deebee.exe`.
+```
+PS C:\Users\littlehelper\Documents> Get-FileHash -Algorithm MD5 deebee.exe
+
+Algorithm       Hash                                                                   Path
+---------       ----                                                                   ----
+MD5             5F037501FB542AD2D9B06EB12AED09F0                                       C:\Users\littlehelper\Documents\deebee.exe
+```
+
+### Getting the flag!
+
+We can use `C:\Tools\strings64.exe` (similar to the strings command on Linux) to find all the strings in a binary file. Then we pipe it into the `Select-String` cmdlet (which will work similar to grep in Linux) with a pattern.
+```
+PS C:\Users\littlehelper\Documents> /Tools/strings64.exe -nobanner deebee.exe | Select-String -Pattern "THM{*"
+
+THM{f6187e6cbeb1214139ef313e108cb6f9}
+```
+
+Flag 1: `THM{f6187e6cbeb1214139ef313e108cb6f9}`
+
+### Running the real database connector and getting another flag!
+
+We can look at the executable for Alternate Data Streams.
+```
+PS C:\Users\littlehelper\Documents> Get-Item deebee.exe -Stream *
+
+
+PSPath        : Microsoft.PowerShell.Core\FileSystem::C:\Users\littlehelper\Documents\deebee.exe::$DATA
+PSParentPath  : Microsoft.PowerShell.Core\FileSystem::C:\Users\littlehelper\Documents
+PSChildName   : deebee.exe::$DATA
+PSDrive       : C
+PSProvider    : Microsoft.PowerShell.Core\FileSystem
+PSIsContainer : False
+FileName      : C:\Users\littlehelper\Documents\deebee.exe
+Stream        : :$DATA
+Length        : 5632
+
+PSPath        : Microsoft.PowerShell.Core\FileSystem::C:\Users\littlehelper\Documents\deebee.exe:hidedb
+PSParentPath  : Microsoft.PowerShell.Core\FileSystem::C:\Users\littlehelper\Documents
+PSChildName   : deebee.exe:hidedb
+PSDrive       : C
+PSProvider    : Microsoft.PowerShell.Core\FileSystem
+PSIsContainer : False
+FileName      : C:\Users\littlehelper\Documents\deebee.exe
+Stream        : hidedb
+Length        : 6144
+```
+
+We can then run hidden executable.
+```
+PS C:\Users\littlehelper\Documents> wmic process call create $(Resolve-Path .\deebee.exe:hidedb)
+Executing (Win32_Process)->Create()
+Method execution successful.
+Out Parameters:
+instance of __PARAMETERS
+{
+        ProcessId = 172;
+        ReturnValue = 0;
+};
+```
+
+And then we get our final flag!
+```
+Choose an option:
+1) Nice List
+2) Naughty List
+3) Exit
+
+THM{088731ddc7b9fdeccaed982b07c297c}
+
+Select an option:
+```
+
+Flag 2: `THM{088731ddc7b9fdeccaed982b07c297c}`
