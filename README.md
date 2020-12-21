@@ -25,7 +25,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 17 - ReverseELFneering](#day-17-reverse-elfneering)
 - [x] [Day 18 - The Bits of the Christmas](#day-18-the-bits-of-the-christmas)
 - [x] [Day 19 - The Naughty or Nice List](#day-19-the-naughty-or-nice-list)
-- [ ] Day 20 - PowershELlF to the rescue
+- [x] [Day 20 - PowershELlF to the rescue](#day-20-powershellf-to-the-rescue)
 - [ ] Day 21 - Time for some ELForensics
 - [ ] Day 22 - Elf McEager becomes CyberElf
 - [ ] Day 23 - The Grinch strikes again!
@@ -2035,3 +2035,148 @@ Now, we can log in with Santa's credentials and we are greeted with an admin pan
 If we click the `DELETE NAUGHTY LIST` button, we get the flag in a JavaScript alert!
 
 Flag: `THM{EVERYONE_GETS_PRESENTS}`
+
+## Day 20: PowershELlF to the rescue
+
+*Category: Blue Teaming*  
+*Tags: Powershell*
+
+> Understand how to use PowerShell to find all that was removed from the stockings that were hidden throughout the endpoint.
+
+IP: `10.10.90.95`
+
+### Connecting via SSH
+
+We are given the credentials `mceager:r0ckStar!`
+
+We run SSH with the following command:
+```
+ssh mceager@10.10.90.95
+```
+
+We are then greeted with a Windows Command prompt which we can make a Powershell prompt!
+```
+Microsoft Windows [Version 10.0.17763.737]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+mceager@ELFSTATION1 C:\Users\mceager>powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved. 
+
+PS C:\Users\mceager> 
+```
+
+### Getting started in PowerShell
+
+Being a macOS and Linux user all my life (well, I have and still use Windows just not for coding), I am very unfamiliar with the Command Prompt and Powershell.
+
+First we change to the Documents folder.
+```
+PS C:\Users\mceager> Set-Location Documents 
+PS C:\Users\mceager\Documents>
+```
+
+We can then do a quick directory listing.
+```
+PS C:\Users\mceager\Documents> Get-ChildItem -File -Hidden
+
+
+    Directory: C:\Users\mceager\Documents
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a-hs-        12/7/2020  10:29 AM            402 desktop.ini
+-arh--       11/18/2020   5:05 PM             35 e1fone.txt
+```
+
+Note, I will be using some Linux aliases throughout since PS cmdlets are too verbose and I'm lazy and not used to them.
+
+### Search for the first hidden elf file within the Documents folder. Read the contents of this file. What does Elf 1 want?
+
+We can get the contents from the `e1fone.txt` file.
+```
+PS C:\Users\mceager\Documents> cat e1fone.txt
+All I want is my '2 front teeth'!!!
+```
+
+### Search on the desktop for a hidden folder that contains the file for Elf 2. Read the contents of this file. What is the name of that movie that Elf 2 wants?
+
+First, we change to the Desktop folder.
+```
+PS C:\Users\mceager\Documents> cd ../Desktop
+```
+
+We see an `elf2wo` directory so let's explore.
+```
+PS C:\Users\mceager\Desktop> ls -Hidden
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d--h--        12/7/2020  11:26 AM                elf2wo
+-a-hs-        12/7/2020  10:29 AM            282 desktop.ini
+
+PS C:\Users\mceager\Desktop> cd elf2wo
+PS C:\Users\mceager\Desktop\elf2wo> ls 
+
+
+    Directory: C:\Users\mceager\Desktop\elf2wo
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----       11/17/2020  10:26 AM             64 e70smsW10Y4k.txt
+
+PS C:\Users\mceager\Desktop\elf2wo> cat e70smsW10Y4k.txt
+I want the movie Scrooged <3!
+```
+
+### Search the Windows directory for a hidden folder that contains files for Elf 3. What is the name of the hidden folder?
+
+We can run the following cmdlet to find the hidden folder for Elf 3.
+```
+PS C:\> ls -Recurse -Path C:\Windows -Filter '*3*' -Directory -Hidden -ErrorAction SilentlyContinue
+
+
+    Directory: C:\Windows\System32
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d--h--       11/23/2020   3:26 PM                3lfthr3e
+```
+
+We can then change into that directory.
+```
+PS C:\> cd C:/Windows/System32/3lfthr3e
+```
+
+### How many words does the first file contain?
+
+We can pipe the output of `Get-Content` into `Measure-Object -Word` to get a word count.
+```
+PS C:\Windows\System32\3lfthr3e> cat 1.txt | Measure-Object -Word
+
+Lines Words Characters Property 
+----- ----- ---------- --------
+       9999
+```
+
+### What 2 words are at index 551 and 6991 in the first file?
+
+We can use square brackets to index the output.
+```
+PS C:\Windows\System32\3lfthr3e> (cat 1.txt)[551]
+Red
+PS C:\Windows\System32\3lfthr3e> (cat 1.txt)[6991]
+Ryder
+```
+
+### Search in the 2nd file for the phrase from the previous question to get the full answer. What does Elf 3 want?
+
+We can search inside a file with a pattern as follows:
+```
+PS C:\Windows\System32\3lfthr3e> Select-String 2.txt -Pattern "redryder*" 
+
+2.txt:558704:redryderbbgun
+```
