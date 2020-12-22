@@ -27,7 +27,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 19 - The Naughty or Nice List](#day-19-the-naughty-or-nice-list)
 - [x] [Day 20 - PowershELlF to the rescue](#day-20-powershellf-to-the-rescue)
 - [x] [Day 21 - Time for some ELForensics](#day-21-time-for-some-elforensics)
-- [ ] Day 22 - Elf McEager becomes CyberElf
+- [x] [Day 22 - Elf McEager becomes CyberElf](#Day-22-Elf-McEager-becomes-CyberElf)
 - [ ] Day 23 - The Grinch strikes again!
 - [ ] Day 24 - The Trial Before Christmas
 
@@ -2294,3 +2294,55 @@ Select an option:
 ```
 
 Flag 2: `THM{088731ddc7b9fdeccaed982b07c297c}`
+
+## Day 22: Elf McEager becomes CyberElf
+
+*Category: Blue Teaming*  
+*Tags: Cyberchef, Encoding*
+
+> You have found where the naughty list has been hidden online but it's encoded. Learn how to decode the contents of this file using CyberChef.
+
+IP: `10.10.195.171`
+
+### Logging in
+
+Once again, we can use Microsoft RDP to log in. Once logged in, we find a folder with the name `dGhlZ3JpbmNod2FzaGVyZQ==`. It kinda looks like base64, so i decide to base 64 decode it.
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day22-elf-mceager-becomes-cyberelf$ echo "dGhlZ3JpbmNod2FzaGVyZQ==" | base64 -d
+thegrinchwashere
+```
+
+Ahh, big yikes...
+
+### Opening keypass
+
+If we open keypass, we find out that it is locked with a master password. We can try to use `thegrinchwashere` as the password and sure enough, it works!
+
+![screenshot](day22-elf-mceager-becomes-cyberelf/locked_keypass.png)
+
+### Getting the passwords
+
+I will be using CyberChef to decode most if not all of these.  
+
+The password for the Elf Server is `736e30774d346e21` which we can decode using hex to find `sn0wM4n!`  
+
+The password for the ElfMail is `&#105;&#99;&#51;&#83;&#107;&#97;&#116;&#105;&#110;&#103;&excl;` which we can decode using HTML Entity to find `ic3Skating!`
+
+### Getting the flag
+
+If we look at the notes for the Elf Security System. It looks like obfuscated JavaScript code.
+
+```js
+eval(String.fromCharCode(118, 97, 114, 32, 115, 111, 109, 101, 115, 116, 114, 105, 110, 103, 32, 61, 32, 100, 111, 99, 117, 109, 101, 110, 116, 46, 99, 114, 101, 97, 116, 101, 69, 108, 101, 109, 101, 110, 116, 40, 39, 115, 99, 114, 105, 112, 116, 39, 41, 59, 32, 115, 111, 109, 101, 115, 116, 114, 105, 110, 103, 46, 116, 121, 112, 101, 32, 61, 32, 39, 116, 101, 120, 116, 47, 106, 97, 118, 97, 115, 99, 114, 105, 112, 116, 39, 59, 32, 115, 111, 109, 101, 115, 116, 114, 105, 110, 103, 46, 97, 115, 121, 110, 99, 32, 61, 32, 116, 114, 117, 101, 59, 115, 111, 109, 101, 115, 116, 114, 105, 110, 103, 46, 115, 114, 99, 32, 61, 32, 83, 116, 114, 105, 110, 103, 46, 102, 114, 111, 109, 67, 104, 97, 114, 67, 111, 100, 101, 40, 49, 48, 52, 44, 32, 49, 48, 52, 44, 32, 49, 49, 54, 44, 32, 49, 49, 54, 44, 32, 49, 49, 50, 44, 32, 49, 49, 53, 44, 32, 53, 56, 44, 32, 52, 55, 44, 32, 52, 55, 44, 32, 49, 48, 51, 44, 32, 49, 48, 53, 44, 32, 49, 49, 53, 44, 32, 49, 49, 54, 44, 32, 52, 54, 44, 32, 49, 48, 51, 44, 32, 49, 48, 53, 44, 32, 49, 49, 54, 44, 32, 49, 48, 52, 44, 32, 49, 49, 55, 44, 32, 57, 56, 44, 32, 52, 54, 44, 32, 57, 57, 44, 32, 49, 49, 49, 44, 32, 49, 48, 57, 44, 32, 52, 55, 44, 32, 49, 48, 52, 44, 32, 49, 48, 49, 44, 32, 57, 55, 44, 32, 49, 49, 56, 44, 32, 49, 48, 49, 44, 32, 49, 49, 48, 44, 32, 49, 49, 52, 44, 32, 57, 55, 44, 32, 49, 48, 53, 44, 32, 49, 50, 50, 44, 32, 57, 55, 44, 32, 52, 55, 41, 59, 32, 32, 32, 118, 97, 114, 32, 97, 108, 108, 115, 32, 61, 32, 100, 111, 99, 117, 109, 101, 110, 116, 46, 103, 101, 116, 69, 108, 101, 109, 101, 110, 116, 115, 66, 121, 84, 97, 103, 78, 97, 109, 101, 40, 39, 115, 99, 114, 105, 112, 116, 39, 41, 59, 32, 118, 97, 114, 32, 110, 116, 51, 32, 61, 32, 116, 114, 117, 101, 59, 32, 102, 111, 114, 32, 40, 32, 118, 97, 114, 32, 105, 32, 61, 32, 97, 108, 108, 115, 46, 108, 101, 110, 103, 116, 104, 59, 32, 105, 45, 45, 59, 41, 32, 123, 32, 105, 102, 32, 40, 97, 108, 108, 115, 91, 105, 93, 46, 115, 114, 99, 46, 105, 110, 100, 101, 120, 79, 102, 40, 83, 116, 114, 105, 110, 103, 46, 102, 114, 111, 109, 67, 104, 97, 114, 67, 111, 100, 101, 40, 52, 57, 44, 32, 52, 57, 44, 32, 49, 48, 48, 44, 32, 53, 49, 44, 32, 53, 48, 44, 32, 52, 57, 44, 32, 53, 48, 44, 32, 53, 50, 44, 32, 53, 50, 44, 32, 57, 57, 44, 32, 53, 50, 44, 32, 49, 48, 48, 44, 32, 53, 52, 44, 32, 53, 52, 44, 32, 53, 53, 44, 32, 53, 50, 44, 32, 53, 50, 44, 32, 53, 52, 44, 32, 49, 48, 48, 44, 32, 57, 56, 44, 32, 49, 48, 50, 44, 32, 49, 48, 48, 44, 32, 53, 55, 44, 32, 57, 55, 44, 32, 53, 49, 44, 32, 53, 48, 44, 32, 53, 55, 44, 32, 53, 54, 44, 32, 57, 55, 44, 32, 53, 54, 44, 32, 53, 54, 44, 32, 57, 56, 44, 32, 53, 54, 41, 41, 32, 62, 32, 45, 49, 41, 32, 123, 32, 110, 116, 51, 32, 61, 32, 102, 97, 108, 115, 101, 59, 125, 32, 125, 32, 105, 102, 40, 110, 116, 51, 32, 61, 61, 32, 116, 114, 117, 101, 41, 123, 100, 111, 99, 117, 109, 101, 110, 116, 46, 103, 101, 116, 69, 108, 101, 109, 101, 110, 116, 115, 66, 121, 84, 97, 103, 78, 97, 109, 101, 40, 34, 104, 101, 97, 100, 34, 41, 91, 48, 93, 46, 97, 112, 112, 101, 110, 100, 67, 104, 105, 108, 100, 40, 115, 111, 109, 101, 115, 116, 114, 105, 110, 103, 41, 59, 32, 125));
+```
+
+If we run it in the browser console, we get the following:
+
+```html
+<script type=​"text/​javascript" async src=​"hhttps:​/​/​gist.github.com/​heavenraiza/​">​</script>​
+```
+
+Looks like they made a typo, but if we go to `https:​/​/​gist.github.com/​heavenraiza/`, we can find the final flag!
+
+Flag: `THM{657012dcf3d1318dca0ed864f0e70535}`
