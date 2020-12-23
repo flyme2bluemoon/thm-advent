@@ -28,7 +28,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 20 - PowershELlF to the rescue](#day-20-powershellf-to-the-rescue)
 - [x] [Day 21 - Time for some ELForensics](#day-21-time-for-some-elforensics)
 - [x] [Day 22 - Elf McEager becomes CyberElf](#Day-22-Elf-McEager-becomes-CyberElf)
-- [ ] Day 23 - The Grinch strikes again!
+- [x] [Day 23 - The Grinch strikes again!](#Day-23-The-Grinch-strikes-again)
 - [ ] Day 24 - The Trial Before Christmas
 
 ## Day 1: A Christmas Crisis
@@ -2346,3 +2346,67 @@ If we run it in the browser console, we get the following:
 Looks like they made a typo, but if we go to `https:​/​/​gist.github.com/​heavenraiza/`, we can find the final flag!
 
 Flag: `THM{657012dcf3d1318dca0ed864f0e70535}`
+
+## Day 23: The Grinch strikes again
+
+*Category: Blue Teaming*  
+*Tags: Volume shadow copy service, Windows forensics*
+
+> As the day draws near the Grinch is desperate. He used his secret weapon and launched a ransomware attack crippling the endpoints. Understand what is VSS and how it is used to recover files on the endpoint.
+
+IP: `10.10.71.169`
+
+### Connecting via RDP
+
+Once again, I used Microsoft Remote Desktop to connect. This time the credentials are: `administrator:sn0wF!akes!!!`
+
+### Reading the ransomnote
+
+If we open the ransomnote, we find the following message.
+
+```
+As you were calmly looking at your documents I encrypted all the workstations at Best Festival Company just now. Including yours McEager! Send me lots and lots of money to my bitcoin address (bm9tb3JlYmVzdGZlc3RpdmFsY29tcGFueQ==) and MAYBE I'll give you the key to decrypt. >:^p
+```
+
+The bitcoin address something in base64. We can try to decode it.
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day23-the-grinch-strikes-again$ echo "bm9tb3JlYmVzdGZlc3RpdmFsY29tcGFueQ==" | base64 -d
+nomorebestfestivalcompany
+```
+
+### Looking at the encrypted files
+
+First we assign a letter to all of the dirves so that we can view them in the Windows explorer. 
+![screenshot](day23-the-grinch-strikes-again/disk_management.png)
+
+I took a look at the Backup drive first.
+
+![screenshot](day23-the-grinch-strikes-again/backup.png)
+
+The database folder contains an empty txt file.
+
+The vStockings folder seems more interesting as it contains some encrypted files.
+
+![screenshot](day23-the-grinch-strikes-again/elf1.png)
+![screenshot](day23-the-grinch-strikes-again/elf2.png)
+![screenshot](day23-the-grinch-strikes-again/elf3.png)
+
+It seems like the encrypted files have a `.grinch` extension.
+
+Lastly, there is a confidential folder which is hidden. Inside, there is the `master-password.txt.grinch` file. However, it is not encrypted so we can see that his password is `m33pa55w0rdIZseecure!`.
+
+### Looking through the scheduled tasks
+
+We can also take a look through the scheduled tasks. Looking through them, the `opidsfsdf` task looks quite suspicious. It seems to be running whenever the Administrator user logs in.
+![screenshot](day23-the-grinch-strikes-again/tasks.png)
+
+Let's collect more information!
+
+It seems like it starts to run an executable file at `C:\Users\Administrator\Desktop\opidsfsdf.exe`
+
+![screenshot](day23-the-grinch-strikes-again/actions.png)
+
+### Looking for a VSS scheduled task
+
+Looking through the scheduled tasks, we also find `ShadowCopyVolume{7a9eea15-0000-0000-0000-010000000000}` which seems to be the part of the Volume Shadow Copu Service.
